@@ -190,7 +190,7 @@ function setMode(m) {
   renderMode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.mode-btn')[m]?.classList.add('active');
-  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO', 'A, HEARTBEAT', 'A, LOVE RAIN', 'A, NEON LOVE'];
+  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO', 'A, HEARTBEAT', 'A, LOVE RAIN', 'A, NEON LOVE', 'B, MAGNETIC', 'B, RADAR', 'B, BURNING'];
   hudMode.textContent = names[m];
   hudMode.style.color = getModePrimaryColor(m);
 
@@ -207,7 +207,7 @@ function setMode(m) {
 }
 
 function getModePrimaryColor(m) {
-  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa', '#ff0055', '#ffccff', '#ff00aa'];
+  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa', '#ff0055', '#ffccff', '#ff00aa', '#cc00ff', '#00ff00', '#ff5500'];
   return colors[m];
 }
 
@@ -316,6 +316,9 @@ function loop(timestamp) {
     case 38: renderAHeartbeat(dt); break;
     case 39: renderALoveRain(dt); break;
     case 40: renderANeonLove(dt); break;
+    case 41: renderBMagnetic(dt); break;
+    case 42: renderBRadar(dt); break;
+    case 43: renderBBurning(dt); break;
   }
 
   // HUD update (every 8 frames)
@@ -3009,6 +3012,177 @@ function renderANeonLove(dt) {
   // Reset shadow
   ctx.shadowBlur = 0;
   ctx.textAlign = 'start';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 41: B, MAGNETIC (Attraction to cursor)
+// ═══════════════════════════════════════════════════════
+function renderBMagnetic(dt) {
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const t = time * speedMult;
+  
+  ctx.fillStyle = 'rgba(5, 0, 10, 0.3)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const targetX = mouseNX * cols;
+  const targetY = mouseNY * rows;
+  const text = "B, I WANT YOU";
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const dx = targetX - x;
+      const dy = targetY - y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      let ch = CHAR_SETS.minimal[Math.floor(Math.random() * CHAR_SETS.minimal.length)];
+      let lum = 20;
+      let hue = 260; // Deep purple
+
+      // The closer to the mouse, the stronger the attraction/light
+      if (dist < 10) {
+        lum = 100 - dist * 8;
+        hue = 300 + (10 - dist) * 6; // Turns pink/red
+        
+        // Form the words near the cursor
+        const wordIndex = Math.floor(x - targetX + text.length/2);
+        if (Math.abs(dy) < 2 && wordIndex >= 0 && wordIndex < text.length) {
+          ch = text[wordIndex];
+          lum = 100;
+          hue = 340;
+        } else if (dist < 3) {
+          ch = "+";
+        }
+      }
+
+      // Swirling effect towards center
+      const angle = Math.atan2(dy, dx);
+      if (Math.sin(angle * 4 + dist - t * 5) > 0.8 && dist < 20) {
+        lum += 30;
+      }
+
+      if (lum > 20) {
+        ctx.fillStyle = hslToStr(hue, 100, lum);
+        ctx.fillText(ch, x * CELL, y * CELL);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 42: B, RADAR (Searching for you)
+// ═══════════════════════════════════════════════════════
+function renderBRadar(dt) {
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const t = time * 3 * speedMult;
+  
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = cols / 2;
+  const cy = rows / 2;
+  const radarAngle = t % (Math.PI * 2);
+  
+  const text = "B, I WANT YOU";
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      let angle = Math.atan2(dy, dx);
+      if (angle < 0) angle += Math.PI * 2;
+
+      // Radar beam
+      let angleDiff = radarAngle - angle;
+      if (angleDiff < 0) angleDiff += Math.PI * 2;
+
+      let intensity = 0;
+      if (angleDiff < 0.5) {
+        intensity = 1.0 - (angleDiff / 0.5);
+      }
+      
+      // Add some persistent glow to the text
+      const wordIndex = Math.floor(x - cx + text.length/2);
+      const isText = (Math.abs(dy) < 1 && wordIndex >= 0 && wordIndex < text.length);
+
+      if (isText) {
+        intensity = Math.max(intensity, 0.3); // Text is always slightly visible
+      } else {
+        // Grid rings
+        if (Math.abs(dist % 10) < 0.5) intensity = Math.max(intensity, 0.1);
+      }
+
+      if (intensity > 0.05) {
+        const ch = isText ? text[wordIndex] : CHAR_SETS.ascii[Math.floor(Math.random() * 5)];
+        const hue = isText ? 0 : 120; // Text is red, radar is green
+        const sat = isText ? 100 : 80;
+        const lum = intensity * 60;
+        
+        ctx.fillStyle = hslToStr(hue, sat, lum);
+        ctx.fillText(ch, x * CELL, y * CELL);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 43: B, BURNING (ASCII Fire)
+// ═══════════════════════════════════════════════════════
+function renderBBurning(dt) {
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const t = time * 8 * speedMult;
+  
+  ctx.fillStyle = '#050000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = cols / 2;
+  const cy = rows / 2;
+  const text = "B, I WANT YOU";
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      // Fire height based on noise
+      const fireNoise = Math.sin(x * 0.5 + t) * Math.cos(x * 0.2 - t * 1.5);
+      const fireHeight = rows - 15 + fireNoise * 10;
+      
+      let intensity = 0;
+      if (y > fireHeight) {
+        intensity = (y - fireHeight) / 15;
+      }
+      
+      // Text in the middle
+      const wordIndex = Math.floor(x - cx + text.length/2);
+      const isText = (Math.abs(y - cy) < 1 && wordIndex >= 0 && wordIndex < text.length);
+
+      if (isText) {
+        // Text is burning
+        intensity = Math.random() * 0.5 + 0.5;
+      } else if (y > cy - 2 && y < cy + 3 && Math.abs(x - cx) < 10) {
+        // Heat distortion around text
+        intensity += Math.random() * 0.3;
+      }
+
+      if (intensity > 0) {
+        const ch = isText ? text[wordIndex] : CHAR_SETS.dense[Math.floor(intensity * (CHAR_SETS.dense.length - 1))];
+        
+        // Fire colors: Yellow -> Orange -> Red -> Dark Red
+        const hue = 40 - intensity * 40; 
+        const lum = isText ? 90 : Math.min(50, intensity * 100);
+        
+        ctx.fillStyle = hslToStr(hue, 100, lum);
+        
+        // Slight vertical shake for fire
+        const shakeY = isText ? 0 : (Math.random() - 0.5) * 4;
+        ctx.fillText(ch, x * CELL, y * CELL + shakeY);
+      }
+    }
+  }
 }
 
 idleLoop();
