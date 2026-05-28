@@ -2957,11 +2957,39 @@ function renderANeonLove(dt) {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
+  // --- ASCII Neon Hearts Background ---
+  ctx.font = `bold ${Math.floor(CELL * 1.5)}px monospace`;
+  const heartArts = ["<3", "♥", "♡", "~*"];
+  
+  for (let y = 0; y < rows; y += 4) {
+    // Sway back and forth
+    const sway = Math.sin(t * 0.3 + y * 0.2) * (cols * 0.3);
+    
+    for (let i = 0; i < 4; i++) {
+      const baseSpacing = cols / 4;
+      let hx = Math.floor(i * baseSpacing + sway + (y % 2 === 0 ? t*2 : -t*2));
+      
+      // Wrap around
+      hx = hx % cols;
+      if (hx < 0) hx += cols;
+
+      const art = heartArts[(y + i) % heartArts.length];
+      const pulse = Math.sin(t * 2 + hx * 0.2 + y) * 0.5 + 0.5;
+      
+      ctx.shadowBlur = 10 * pulse + 5;
+      ctx.shadowColor = hslToStr(330 + (i * 10), 100, 50);
+      ctx.fillStyle = hslToStr(330 + (i * 10), 100, 30 + 50 * pulse);
+      
+      ctx.fillText(art, hx * CELL, y * CELL);
+    }
+  }
+  ctx.shadowBlur = 0; // Reset for text
+
+  // --- Main Neon Sign ---
   // Flickering effect (faulty neon tube)
   const flicker = Math.random() < 0.05 ? 0.2 : (Math.sin(t) * 0.1 + 0.9);
   
   ctx.font = `italic bold ${Math.floor(CELL * 6)}px sans-serif`;
-
   const text = "A, I LOVE YOU";
 
   // Glow / Blur layers
