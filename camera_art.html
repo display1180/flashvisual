@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Second Genesis — Camera Interface</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Space Mono', monospace;
+      color: #fff;
+    }
+    canvas { display: block; }
+
+    /* ── 시작 오버레이 (권한 요청 안내) ── */
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: #020205;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      transition: opacity 1.2s ease-out;
+    }
+    #start-overlay h1 {
+      font-size: clamp(24px, 5vw, 60px);
+      font-weight: 700;
+      letter-spacing: 8px;
+      color: #fff;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    #start-overlay .sub {
+      font-size: 14px;
+      color: #88a;
+      letter-spacing: 2px;
+      margin-bottom: 60px;
+      text-align: center;
+      line-height: 1.8;
+    }
+    
+    #loading-status {
+      font-size: 16px;
+      color: #0ff;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      animation: pulse 1s infinite;
+    }
+    
+    #start-btn {
+      background: transparent;
+      color: #0f0;
+      border: 1px solid rgba(0, 255, 0, 0.4);
+      padding: 14px 40px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      display: none; /* 모델 로딩 전까지 숨김 */
+    }
+    #start-btn:hover {
+      background: rgba(0, 255, 0, 0.1);
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+    }
+    
+    /* ── 시스템 HUD ── */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    #hud.visible { opacity: 1; }
+    
+    .hud-corner {
+      position: absolute;
+      width: 40px; height: 40px;
+      border: 2px solid rgba(0, 255, 100, 0.5);
+    }
+    .top-left { top: 40px; left: 40px; border-right: none; border-bottom: none; }
+    .top-right { top: 40px; right: 40px; border-left: none; border-bottom: none; }
+    .bottom-left { bottom: 40px; left: 40px; border-right: none; border-top: none; }
+    .bottom-right { bottom: 40px; right: 40px; border-left: none; border-top: none; }
+    
+    .hud-text {
+      position: absolute;
+      top: 45px; left: 95px;
+      color: #0f0;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+    
+    /* 레코딩 표시 (깜빡임) */
+    .rec {
+      position: absolute;
+      top: 45px; right: 95px;
+      color: #f00;
+      font-size: 12px;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rec-dot {
+      width: 10px; height: 10px;
+      background: #f00;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+  </style>
+</head>
+<body>
+
+  <!-- 권한 요청 및 시작 화면 -->
+  <div id="start-overlay">
+    <h1>Visual Input Sequence</h1>
+    <div class="sub">
+      카메라 권한을 허용해 주셔야 실시간 렌더링이 가능합니다.<br>
+      (브라우저 상단 권한 팝업 확인)
+    </div>
+    <div id="loading-status">Loading Neural Networks...</div>
+    <button id="start-btn">ACCESS CAMERA</button>
+  </div>
+
+  <!-- HUD 레이어 -->
+  <div id="hud">
+    <div class="hud-corner top-left"></div>
+    <div class="hud-corner top-right"></div>
+    <div class="hud-corner bottom-left"></div>
+    <div class="hud-corner bottom-right"></div>
+    <div class="hud-text">SYS.OPTIC // SEC.GENESIS</div>
+    <div class="rec"><div class="rec-dot"></div> REC</div>
+  </div>
+
+  <script src="camera_art.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "duration": 242.0,
+  "lyrics": [
+    { "start": 39.82, "end": 40.50, "text": "A," },
+    { "start": 48.00, "end": 48.76, "text": "I love you" },
+    { "start": 52.29, "end": 53.15, "text": "A," },
+    { "start": 55.98, "end": 57.59, "text": "I love you" },
+    { "start": 58.28, "end": 59.26, "text": "A," },
+    { "start": 64.06, "end": 64.76, "text": "I love" },
+    { "start": 64.85, "end": 65.50, "text": "you" },
+
+    { "start": 88.86, "end": 89.47, "text": "A," },
+
+    { "start": 111.97, "end": 112.76, "text": "A," },
+    { "start": 113.82, "end": 114.75, "text": "I love you" },
+    { "start": 115.77, "end": 116.75, "text": "B," },
+    { "start": 117.82, "end": 118.75, "text": "I want you" },
+    { "start": 119.81, "end": 120.77, "text": "C," },
+    { "start": 121.81, "end": 122.76, "text": "I miss you" },
+
+    { "start": 123.41, "end": 124.69, "text": "A," },
+    { "start": 125.83, "end": 126.76, "text": "I love you" },
+    { "start": 127.04, "end": 128.75, "text": "B," },
+    { "start": 129.82, "end": 130.75, "text": "I want you" },
+    { "start": 131.33, "end": 132.77, "text": "C," },
+    { "start": 133.82, "end": 134.75, "text": "I miss you" },
+
+    { "start": 135.81, "end": 136.77, "text": "A," },
+    { "start": 137.81, "end": 138.74, "text": "I love you" },
+    { "start": 139.78, "end": 140.67, "text": "B," },
+    { "start": 141.80, "end": 142.76, "text": "I want you" },
+    { "start": 142.80, "end": 144.50, "text": "C," },
+
+    { "start": 147.82, "end": 148.38, "text": "I miss" },
+    { "start": 150.07, "end": 151.16, "text": "you" },
+
+    { "start": 166.30, "end": 166.91, "text": "C," },
+    { "start": 174.10, "end": 174.75, "text": "I miss" },
+    { "start": 175.17, "end": 175.78, "text": "you" },
+
+    { "start": 182.04, "end": 183.76, "text": "C, I miss you" },
+    { "start": 184.09, "end": 184.65, "text": "C," },
+    { "start": 186.06, "end": 187.15, "text": "I miss" },
+    { "start": 187.32, "end": 188.01, "text": "you" },
+
+    { "start": 198.00, "end": 199.34, "text": "C, I miss you" },
+    { "start": 205.98, "end": 208.52, "text": "C, I miss you" },
+    { "start": 208.61, "end": 209.40, "text": "C," }
+  ]
+}

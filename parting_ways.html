@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parting Ways — Cellular Meiosis</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      overflow: hidden;
+      background: #020205; /* 심해 배경 */
+      font-family: 'Space Mono', monospace;
+      color: #fff;
+    }
+    canvas { display: block; }
+
+    /* ── 시작 오버레이 ── */
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: #020205;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      transition: opacity 1.2s ease-out;
+    }
+    #start-overlay h1 {
+      font-size: clamp(32px, 6vw, 80px);
+      font-weight: 700;
+      letter-spacing: 12px;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
+      margin-bottom: 24px;
+    }
+    #start-overlay .sub {
+      font-size: 13px;
+      color: #88a;
+      letter-spacing: 3px;
+      margin-bottom: 60px;
+      text-align: center;
+      line-height: 1.8;
+    }
+    #start-btn {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 14px 52px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.35s;
+    }
+    #start-btn:hover {
+      background: #fff;
+      color: #020205;
+      box-shadow: 0 0 50px rgba(255,255,255,0.25);
+    }
+    #loading-text {
+      display: none;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #64c8ff;
+      letter-spacing: 3px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── 정보 HUD ── */
+    #hud {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    #hud.visible { opacity: 1; }
+    .hud-line {
+      font-size: 11px;
+      color: #88a;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .hud-value {
+      color: #64c8ff;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 시작 화면 -->
+  <div id="start-overlay">
+    <h1>PARTING WAYS</h1>
+    <div class="sub">
+      Cellular Meiosis Simulation<br>
+      Metaballs & Signed Distance Field
+    </div>
+    <button id="start-btn">Initiate Sequence</button>
+    <div id="loading-text">Loading simulation...</div>
+  </div>
+
+  <!-- 상태 표시 -->
+  <div id="hud">
+    <div class="hud-line">Cells: <span class="hud-value" id="hud-cells">1</span></div>
+    <div class="hud-line">Status: <span class="hud-value" id="hud-status">Incubating</span></div>
+  </div>
+
+  <script src="parting_ways.js"></script>
+</body>
+</html>

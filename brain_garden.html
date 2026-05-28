@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Brain Garden (Optimized)</title>
+  <!-- ES Modules 호환성을 위한 shim 로드 -->
+  <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
+  <!-- Three.js 및 관련 모듈 CDN 설정 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #87CEEB; /* 하늘색 배경 */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      z-index: 10;
+      background: rgba(20, 20, 30, 0.7);
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      backdrop-filter: blur(5px);
+    }
+    h3 { margin-top: 0; margin-bottom: 10px; font-weight: 400; }
+    button {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.4); }
+    .legend {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .legend-item { font-size: 11px; display: flex; align-items: center; margin-bottom: 4px; }
+    .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+    .hint { font-size: 11px; color: #ccc; margin-top: 15px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <h3>Brain Garden</h3>
+    <button id="playBtn">▶ Play Music</button>
+    
+    <div class="legend">
+      <div style="font-size: 12px; margin-bottom: 8px; color: #ddd;">Brainwave Index:</div>
+      <div class="legend-item"><span class="dot" style="background:rgb(150,50,255); box-shadow:0 0 5px rgb(150,50,255);"></span> Delta (Deep Sleep)</div>
+      <div class="legend-item"><span class="dot" style="background:rgb(50,150,255); box-shadow:0 0 5px rgb(50,150,255);"></span> Theta (Meditation)</div>
+      <div class="legend-item"><span class="dot" style="background:rgb(50,255,150); box-shadow:0 0 5px rgb(50,255,150);"></span> Alpha (Relaxation)</div>
+      <div class="legend-item"><span class="dot" style="background:rgb(255,200,50); box-shadow:0 0 5px rgb(255,200,50);"></span> Beta (Focus)</div>
+      <div class="legend-item"><span class="dot" style="background:rgb(255,100,200); box-shadow:0 0 5px rgb(255,100,200);"></span> Gamma (Insight)</div>
+    </div>
+    
+    <div class="hint">
+      * 화면을 드래그하여 시점을 이동하세요.
+    </div>
+  </div>
+  <script type="module" src="brain_garden.js"></script>
+
+</body>
+</html>

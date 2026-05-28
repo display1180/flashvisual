@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Handtrack Media Art</title>
+  <!-- p5.js & p5.sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  
+  <!-- Handtrack.js -->
+  <script src="https://cdn.jsdelivr.net/npm/handtrackjs/dist/handtrack.min.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #050505;
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+    }
+    
+    canvas {
+      display: block;
+    }
+
+    #start-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      transition: opacity 0.8s ease-out;
+    }
+
+    #start-overlay h1 {
+      font-weight: 300;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+    }
+
+    #start-overlay p {
+      color: #aaa;
+      font-weight: 300;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    #start-btn {
+      background: linear-gradient(135deg, #ff007f, #7f00ff);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 0, 127, 0.4);
+      transition: all 0.3s ease;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    #start-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(255, 0, 127, 0.6);
+    }
+
+    #loading-text {
+      display: none;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #00ffcc;
+      letter-spacing: 1px;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 시작 오버레이 -->
+  <div id="start-overlay">
+    <h1>SONIC GESTURE</h1>
+    <p>손의 움직임으로 음악의 시공간을 조작하세요.<br>
+       - <b>주먹(Closed):</b> 강력한 파동과 음악 일시 정지<br>
+       - <b>펼친 손(Open):</b> 빛의 궤적과 음악 필터링 제어
+    </p>
+    <button id="start-btn">EXPERIENCE START</button>
+    <div id="loading-text">Loading Audio and AI Models... Please wait.</div>
+  </div>
+
+  <script src="hand_art.js"></script>
+</body>
+</html>

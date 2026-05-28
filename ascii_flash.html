@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII FLASH — Hypnotic Character Storm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Space Mono', monospace;
+      color: #fff;
+    }
+
+    canvas#main-canvas {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1;
+    }
+
+    /* ── Flash overlay for strobe effect ── */
+    #flash-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.05s;
+      mix-blend-mode: screen;
+    }
+
+    /* ── Start Overlay ── */
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      transition: opacity 1.2s ease-out;
+    }
+
+    #start-overlay h1 {
+      font-size: clamp(32px, 6vw, 72px);
+      font-weight: 700;
+      letter-spacing: 16px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradient-shift 2s ease infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes gradient-shift {
+      0%,100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    #start-overlay .sub {
+      font-size: 13px;
+      color: #555;
+      letter-spacing: 4px;
+      margin-bottom: 50px;
+      text-transform: uppercase;
+    }
+
+    #start-btn {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 16px 56px;
+      font-family: 'Space Mono', monospace;
+      font-size: 15px;
+      letter-spacing: 5px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    #start-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #ff00ff33, #00ffff33, #ffff0033);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #start-btn:hover {
+      border-color: #fff;
+      box-shadow: 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(0,255,255,0.15);
+    }
+    #start-btn:hover::before { opacity: 1; }
+
+    /* ── HUD ── */
+    #hud {
+      display: none !important;
+      position: fixed;
+      top: 20px;
+      left: 24px;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    #hud.visible { opacity: 1; }
+    #hud .label {
+      font-size: 10px;
+      color: #444;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    #hud .value {
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    #hud .row { margin-bottom: 6px; }
+
+    /* ── FPS ── */
+    #fps-display {
+      display: none !important;
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 100;
+      font-size: 10px;
+      color: #333;
+      letter-spacing: 2px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    #fps-display.visible { opacity: 1; }
+
+    /* ── Bottom UI Wrapper ── */
+    #bottom-ui-wrapper {
+      position: fixed;
+      bottom: 16px; /* 바닥에 딱 붙게 */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 95%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* ── Speed Slider ── */
+    #speed-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    #speed-panel.visible { opacity: 1; pointer-events: auto; }
+
+    /* ── Mode Panel ── */
+    #mode-panel {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+      display: flex;
+      gap: 6px; /* 버튼 간격 살짝 줄임 */
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    #mode-panel.visible { opacity: 1; pointer-events: auto; }
+
+    .mode-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #888;
+      padding: 8px 18px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.25s;
+    }
+    .mode-btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: #ccc;
+    }
+    .mode-btn.active {
+      color: #fff;
+      border-color: rgba(255,255,255,0.5);
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    #speed-panel label {
+      font-size: 10px;
+      color: #555;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #speed-slider {
+      -webkit-appearance: none;
+      width: 140px;
+      height: 2px;
+      background: #333;
+      outline: none;
+      border-radius: 1px;
+    }
+    #speed-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="main-canvas"></canvas>
+  <div id="flash-layer"></div>
+
+  <!-- Start Screen -->
+  <div id="start-overlay">
+    <h1>Ascii Flash</h1>
+    <div class="sub">Hypnotic Character Storm</div>
+    <button id="start-btn">Enter the Void</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="row"><span class="label">Mode  </span><span class="value" id="hud-mode">PLASMA</span></div>
+    <div class="row"><span class="label">Speed </span><span class="value" id="hud-speed">1.0x</span></div>
+    <div class="row"><span class="label">Chars </span><span class="value" id="hud-chars">0</span></div>
+    <div class="row"><span class="label">Hue   </span><span class="value" id="hud-hue">0°</span></div>
+  </div>
+
+  <div id="fps-display">60 FPS</div>
+
+  <!-- Bottom UI Wrapper -->
+  <div id="bottom-ui-wrapper">
+    <!-- Speed Control -->
+    <div id="speed-panel">
+      <label>Speed</label>
+      <input type="range" id="speed-slider" min="0.2" max="3" step="0.1" value="1">
+    </div>
+
+    <!-- Mode Buttons -->
+    <div id="mode-panel">
+      <button class="mode-btn active" data-mode="0">Plasma</button>
+      <button class="mode-btn" data-mode="1">Vortex</button>
+      <button class="mode-btn" data-mode="2">Matrix</button>
+      <button class="mode-btn" data-mode="3">Shockwave</button>
+      <button class="mode-btn" data-mode="4">Glitch</button>
+      <button class="mode-btn" data-mode="5">Decode</button>
+      <button class="mode-btn" data-mode="6">Swarm</button>
+      <button class="mode-btn" data-mode="7">Hyperspace</button>
+      <button class="mode-btn" data-mode="8">Radar</button>
+      <button class="mode-btn" data-mode="9">Biolum</button>
+      <button class="mode-btn" data-mode="10">Override</button>
+      <button class="mode-btn" data-mode="11">Meltdown</button>
+      <button class="mode-btn" data-mode="12">Infected</button>
+      <button class="mode-btn" data-mode="13">Critical</button>
+      <button class="mode-btn" data-mode="14">Prism</button>
+      <button class="mode-btn" data-mode="15">Chromatic</button>
+      <button class="mode-btn" data-mode="16">Disco</button>
+      <button class="mode-btn" data-mode="17">Julia</button>
+      <button class="mode-btn" data-mode="18">Sierpinski</button>
+      <button class="mode-btn" data-mode="19">Recursion</button>
+      <button class="mode-btn" data-mode="20">Static</button>
+      <button class="mode-btn" data-mode="21">Tearing</button>
+      <button class="mode-btn" data-mode="22">Databend</button>
+      <button class="mode-btn" data-mode="23">Neural</button>
+      <button class="mode-btn" data-mode="24">Symbiosis</button>
+      <button class="mode-btn" data-mode="25">Singularity</button>
+      <button class="mode-btn" data-mode="26">Halo</button>
+      <button class="mode-btn" data-mode="27">Feathers</button>
+      <button class="mode-btn" data-mode="28">Divine</button>
+      <button class="mode-btn" data-mode="29">Tensor</button>
+      <button class="mode-btn" data-mode="30">Scanner</button>
+      <button class="mode-btn" data-mode="31">Sentience</button>
+      <button class="mode-btn" data-mode="32">Rave Skull</button>
+      <button class="mode-btn" data-mode="33">Skeleton Crew</button>
+      <button class="mode-btn" data-mode="34">X-Ray Spine</button>
+      <button class="mode-btn" data-mode="35">IDC Scroll</button>
+      <button class="mode-btn" data-mode="36">IDC Chaos</button>
+      <button class="mode-btn" data-mode="37">IDC Typo</button>
+    </div>
+  </div>
+
+  <script src="ascii_flash.js"></script>
+</body>
+</html>

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Semi-transparent Brain & Neurons</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #05050a;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 220px; /* 기존 너비 대비 절반 수준으로 축소 */
+      z-index: 10;
+      pointer-events: none;
+      background: rgba(20, 20, 30, 0.7);
+      padding: 15px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(5px);
+    }
+    h3 { margin-top: 0; margin-bottom: 10px; font-weight: 300; font-size: 16px; word-break: keep-all; }
+    p { font-size: 11px; color: #ccc; margin-bottom: 5px; word-break: keep-all; line-height: 1.4; }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      color: white;
+      z-index: 20;
+    }
+    /* 모바일 반응형 */
+    @media (max-width: 600px) {
+      #ui {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 15px 12px;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        border-radius: 12px 12px 0 0;
+      }
+      #ui h3 { font-size: 12px; margin-bottom: 4px; text-align: center; }
+      #ui p { display: none; }
+      #ui .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+      #ui .btn-row button { flex: 1; min-width: 0; margin-top: 0 !important; padding: 8px 4px !important; font-size: 10px !important; }
+      #btn-learn { display: none !important; } /* 모바일에서 기술 학습 숨김 */
+      #top-slider {
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        border-radius: 0 0 10px 10px !important;
+        padding: 8px 15px !important;
+        box-sizing: border-box;
+      }
+      #top-slider label { font-size: 10px !important; }
+      #minigame-ui { padding: 20px !important; width: 85% !important; }
+      #minigame-ui h2 { font-size: 16px !important; }
+      #minigame-ui p { font-size: 11px !important; }
+      #minigame-keys { font-size: 26px !important; letter-spacing: 8px !important; }
+    }
+  </style>
+  
+  <!-- ES Modules 호환성을 위한 shim 로드 -->
+  <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
+  <!-- Three.js 및 관련 모듈 CDN 설정 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="ui">
+    <h3>Transparent Brain & Neurons</h3>
+    <p>마우스 왼쪽 버튼 클릭 + 드래그: <b>회전</b></p>
+    <p>마우스 스크롤: <b>확대/축소</b></p>
+    <p>마우스 오른쪽 버튼 클릭 + 드래그: <b>이동</b></p>
+    <div class="btn-row">
+      <button id="btn-stimulate" style="margin-top: 15px; padding: 10px; background: #5a5a9a; color: white; border: none; border-radius: 6px; cursor: pointer; pointer-events: auto; width: 100%; font-weight: bold; font-size: 13px; transition: 0.2s;">⚡ 시냅스 자극</button>
+      <button id="btn-exercise" style="margin-top: 10px; padding: 10px; background: #9a7a3a; color: white; border: none; border-radius: 6px; cursor: pointer; pointer-events: auto; width: 100%; font-weight: bold; font-size: 13px; transition: 0.2s;">🏃 BDNF</button>
+      <button id="btn-learn" style="margin-top: 10px; padding: 10px; background: #2a7a5a; color: white; border: none; border-radius: 6px; cursor: pointer; pointer-events: auto; width: 100%; font-weight: bold; font-size: 13px; transition: 0.2s;">🧩 기술 학습</button>
+    </div>
+    <button id="btn-universe" class="btn-full" style="margin-top: 15px; padding: 10px; background: linear-gradient(135deg, #1e004a, #4a0080); color: white; border: 2px solid #8a2be2; border-radius: 6px; cursor: pointer; pointer-events: auto; width: 100%; font-weight: bold; font-size: 13px; transition: 0.3s; box-shadow: 0 0 15px rgba(138,43,226,0.5);">🌌 뇌 속으로 들어가기</button>
+  </div>
+  
+  <!-- 투명도 슬라이더 (별도 상단 패널) -->
+  <div id="top-slider" style="position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(20, 20, 30, 0.7); padding: 10px 20px; border-radius: 10px; backdrop-filter: blur(5px); width: 220px;">
+    <label for="opacity-slider" style="font-size: 12px; font-weight: bold; color: #ddd; display: block; margin-bottom: 4px; pointer-events: none;">🧠 뇌 껍질 투명도</label>
+    <input type="range" id="opacity-slider" min="0" max="100" value="100" style="width: 100%; pointer-events: auto; cursor: pointer;">
+  </div>
+  
+  <!-- 미니게임 오버레이 UI -->
+  <div id="minigame-ui" style="display:none; position:absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); padding: 30px 40px; border-radius: 15px; text-align: center; z-index: 30; border: 2px solid #2a7a5a; box-shadow: 0 0 20px rgba(42,122,90,0.5);">
+    <h2 style="margin-top: 0; color: #44ffaa;">새로운 신경망 개척 중...</h2>
+    <p id="minigame-desc" style="color: #ccc; margin-bottom: 20px;">화면에 나타난 키를 순서대로 타이핑하세요!</p>
+    <div id="minigame-keys" style="font-size: 36px; letter-spacing: 15px; font-weight: bold; color: white;"></div>
+  </div>
+  
+  <div id="loading">뇌 모델 및 뉴런 데이터를 불러오는 중입니다...</div>
+  <div id="canvas-container"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // 1. 씬 구성
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05050a);
+
+    // 2. 카메라 설정
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // 초기 카메라 위치 (모델 로드 후 자동 조정됨)
+    camera.position.set(0, 0, 300);
+
+    // 3. 렌더러 설정
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    // 4. 조명 설정 (반투명 재질을 돋보이게 하기 위한 입체적인 조명)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    const backLight = new THREE.DirectionalLight(0xaaaaff, 1.5);
+    backLight.position.set(-1, -1, -1);
+    scene.add(backLight);
+
+    // 5. 컨트롤 설정
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // 전체 회전을 위한 그룹
+    const brainGroup = new THREE.Group();
+    scene.add(brainGroup);
+    
+    // 번쩍이는 시냅스들을 추적하기 위한 배열
+    window.flashingSynapses = [];
+    
+    // BDNF 황금빛 가루를 추적하기 위한 배열
+    window.bdnfParticles = [];
+
+    // 상태 관리 변수 (우주 전환 애니메이션용)
+    window.isInsideBrain = false;
+    window.isTransitioning = false;
+    window.transitionProgress = 0.0; // 0: 밖, 1: 안
+    window.baseCameraZ = 300; 
+
+    // 6. 우주 배경(Inner Universe) 파티클 생성
+    const universeGroup = new THREE.Group();
+    scene.add(universeGroup);
+    window.universeGroup = universeGroup; // 전역 접근용
+    
+    const starCount = 4000;
+    const starGeo = new THREE.BufferGeometry();
+    const starVertices = [];
+    
+    // 뇌 모델보다 훨씬 멀리 떨어진 거대한 반경에 별들을 흩뿌림
+    for(let i = 0; i < starCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      
+      const r = 400 + Math.random() * 600; // 400 ~ 1000 거리
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.cos(phi);
+      const z = r * Math.sin(phi) * Math.sin(theta);
+      starVertices.push(x, y, z);
+    }
+    
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0xeeeeff,
+      size: 2.5,
+      transparent: true,
+      opacity: 0.0, // 처음엔 투명하게 숨김
+      sizeAttenuation: true
+    });
+    window.starMat = starMat;
+    
+    const universePoints = new THREE.Points(starGeo, starMat);
+    universeGroup.add(universePoints);
+    universeGroup.visible = false; // 초기엔 렌더링 끄기
+
+    // 7. GLTF 모델 로드 (Promise.all을 사용하여 뇌와 뉴런 모델 동시 로드)
+    const loader = new GLTFLoader();
+    
+    const loadModel = (url) => {
+      return new Promise((resolve, reject) => {
+        loader.load(url, resolve, undefined, reject);
+      });
+    };
+    
+    Promise.all([
+      loadModel('human-brain.glb'),
+      loadModel('neuron.glb')
+    ]).then(([brainGltf, neuronGltf]) => {
+      document.getElementById('loading').style.display = 'none';
+      
+      const brainModel = brainGltf.scene;
+      window.neuronModelTemplate = neuronGltf.scene; // 새로운 기술 학습 등에서 쓰기 위해 전역 저장
+      
+      // 모델 중심을 원점으로 맞추기 위해 Bounding Box 계산
+      const box = new THREE.Box3().setFromObject(brainModel);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      window.brainModel = brainModel; // 렌더링 루프에서 접근하기 위해 전역 저장
+      window.brainSize = size;
+      window.brainCenter = center;
+      
+      // 모델 위치 보정 (원점으로 이동)
+      brainModel.position.x += (brainModel.position.x - center.x);
+      brainModel.position.y += (brainModel.position.y - center.y);
+      brainModel.position.z += (brainModel.position.z - center.z);
+      
+      // 카메라 거리를 모델 크기에 비례하여 자동 조정
+      const maxDim = Math.max(size.x, size.y, size.z);
+      window.baseCameraZ = maxDim * 2.5;
+      camera.position.z = window.baseCameraZ;
+      
+      // [A. 재질 투명화 처리]
+      // 뇌를 감싸는 모든 메쉬를 반투명한 유리(또는 젤리)처럼 만듭니다.
+      brainModel.traverse((child) => {
+        if (child.isMesh) {
+          if (child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 1.0; // 처음에는 완전 불투명
+            // 불투명 상태에서는 깊이 버퍼 활성화
+            child.material.depthWrite = true; 
+            child.material.side = THREE.DoubleSide; // 안팎 모두 렌더링
+          }
+        }
+      });
+      
+      // [A-2. 투명도 슬라이더 연동]
+      document.getElementById('opacity-slider').addEventListener('input', (e) => {
+        const opacityVal = e.target.value / 100;
+        brainModel.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.opacity = opacityVal;
+            
+            // 100% 불투명일 때는 뇌간(stem)이나 안쪽 메쉬가 튀어나오지 않도록 깊이 버퍼 활성화
+            if (opacityVal === 1.0) {
+              child.material.depthWrite = true;
+            } else {
+              child.material.depthWrite = false;
+            }
+            
+            // 투명도가 0이면 성능을 위해 렌더링 생략
+            child.visible = opacityVal > 0;
+          }
+        });
+      });
+      
+      brainGroup.add(brainModel);
+      
+      // [B. 내부 뉴런(실제 3D 모델) 생성]
+      // 뇌 밖으로 삐져나가지 않도록 갯수를 100개로 설정하고 중심부 위주로 배치합니다.
+      const numNeurons = 100;
+      const vertices = []; // 시냅스 연결선용 위치 데이터
+      window.neuronMeshes = []; // 시냅스 자극 시 참조할 뉴런 메쉬들
+      
+      // 타원체 반경 설정 (외피 바깥으로 나가지 않게 Bounding 지름 조절)
+      const rx = size.x / 2 * 0.55;
+      const ry = size.y / 2 * 0.45; // 뇌간 주변 틈새로 삐져나오지 않게 상하 폭을 더 줄임
+      const rz = size.z / 2 * 0.5;
+      
+      for ( let i = 0; i < numNeurons; i ++ ) {
+        // 구면 좌표계를 이용한 3D 무작위 분포
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        
+        // 중심부에서 외곽선까지 골고루 분포하도록 반경 스케일 조정 (큐브루트 사용)
+        const rScale = Math.cbrt(Math.random());
+        
+        const x = rx * rScale * Math.sin(phi) * Math.cos(theta);
+        // 중심을 살짝 위쪽(+0.1)과 앞쪽(+0.05)으로 옮겨 아랫부분 바깥으로 튀어나오는 현상 방지
+        const y = ry * rScale * Math.cos(phi) + size.y * 0.1;
+        const z = rz * rScale * Math.sin(phi) * Math.sin(theta) + size.z * 0.05;
+
+        vertices.push( x, y, z );
+        
+        // neuron.glb 모델 복제 및 배치
+        const neuronClone = window.neuronModelTemplate.clone();
+        neuronClone.position.set(x, y, z);
+        
+        // 뉴런 모델 크기 조절 (자연스러움을 위해 약간의 무작위 스케일 적용)
+        const randomScale = 0.0012 + Math.random() * 0.0008; // 0.0012 ~ 0.0020 사이
+        neuronClone.scale.set(randomScale, randomScale, randomScale);
+        
+        // 자연스럽게 보이도록 무작위 회전
+        neuronClone.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        
+        // 재질 변경 (콕콕 박혀있는 어두운 회색 점의 느낌을 입체로)
+        neuronClone.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xbbbbcc,
+              roughness: 0.7,
+              metalness: 0.2
+            });
+          }
+        });
+        
+        window.neuronMeshes.push(neuronClone);
+        brainGroup.add(neuronClone);
+      }
+      
+      // [C. 시냅스(선) 생성]
+      // 뉴런들 사이를 무작위로 연결하는 선(시냅스)을 그립니다.
+      const lineVertices = [];
+      
+      for (let i = 0; i < numNeurons; i++) {
+        // 약 50% 확률로 이 뉴런에서 다른 뉴런으로 연결을 시도 (일부는 연결되고 일부는 고립됨)
+        if (Math.random() > 0.5) {
+          // 1~2개의 다른 뉴런과 무작위 연결
+          const numConnections = Math.floor(Math.random() * 2) + 1;
+          for (let c = 0; c < numConnections; c++) {
+            const targetIndex = Math.floor(Math.random() * numNeurons);
+            if (targetIndex !== i) {
+              // 출발점과 도착점의 x, y, z 좌표를 쌍으로 추가
+              lineVertices.push(
+                vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2],
+                vertices[targetIndex * 3], vertices[targetIndex * 3 + 1], vertices[targetIndex * 3 + 2]
+              );
+            }
+          }
+        }
+      }
+      
+      const lineGeometry = new THREE.BufferGeometry();
+      lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(lineVertices, 3));
+      
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x888899, // 뉴런보다 살짝 더 어두운 회색 선
+        transparent: true,
+        opacity: 0.4
+      });
+      
+      const synapses = new THREE.LineSegments(lineGeometry, lineMaterial);
+      brainGroup.add(synapses);
+      
+      // [D. 시냅스 자극 버튼 이벤트]
+      document.getElementById('btn-stimulate').addEventListener('click', () => {
+        // 새로운 무작위 선(시냅스) 생성
+        const newLines = [];
+        const flashedNodes = new Set(); // 깜빡일 뉴런 인덱스 저장
+        
+        for (let i = 0; i < 40; i++) { // 한 번 누를 때마다 40개의 연결 추가
+          const idx1 = Math.floor(Math.random() * numNeurons);
+          const idx2 = Math.floor(Math.random() * numNeurons);
+          if (idx1 !== idx2) {
+            newLines.push(
+              vertices[idx1 * 3], vertices[idx1 * 3 + 1], vertices[idx1 * 3 + 2],
+              vertices[idx2 * 3], vertices[idx2 * 3 + 1], vertices[idx2 * 3 + 2]
+            );
+            flashedNodes.add(idx1);
+            flashedNodes.add(idx2);
+          }
+        }
+        
+        const flashGeo = new THREE.BufferGeometry();
+        flashGeo.setAttribute('position', new THREE.Float32BufferAttribute(newLines, 3));
+        
+        // 번쩍이는 푸른빛 재질 (AdditiveBlending으로 겹치면 밝아짐)
+        const flashMat = new THREE.LineBasicMaterial({
+          color: 0xaaddff, 
+          transparent: true,
+          opacity: 1.0,
+          blending: THREE.AdditiveBlending 
+        });
+        
+        const flashLines = new THREE.LineSegments(flashGeo, flashMat);
+        brainGroup.add(flashLines);
+        
+        // 연관된 뉴런 노드들을 번쩍이게 처리
+        const targetMeshes = Array.from(flashedNodes).map(idx => window.neuronMeshes[idx]);
+        
+        targetMeshes.forEach(mesh => {
+          mesh.traverse(child => {
+            if (child.isMesh) {
+              if (!child.userData.originalMat) {
+                child.userData.originalMat = child.material;
+              }
+              // 발광 재질로 임시 교체
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0x88ccff,
+                emissive: 0x0055ff,
+                roughness: 0.1,
+                metalness: 0.5,
+                emissiveIntensity: 1.0
+              });
+            }
+          });
+        });
+        
+        window.flashingSynapses.push({
+          mesh: flashLines,
+          nodes: targetMeshes,
+          life: 1.0
+        });
+      });
+      
+      // [E. 유산소 운동 버튼 이벤트 (BDNF 가루 분비)]
+      document.getElementById('btn-exercise').addEventListener('click', () => {
+        const numDust = 300; // 가루 파티클 개수
+        const dustGeo = new THREE.BufferGeometry();
+        const dustVertices = [];
+        const dustSpeeds = []; // 각 파티클의 상승 속도
+        
+        // 뇌의 가장 아래쪽(Bottom)에서 넓게 분포하여 생성되도록 Y 좌표 기준 설정
+        const bottomY = center.y - size.y / 2;
+        
+        for (let i = 0; i < numDust; i++) {
+          // X, Z는 뇌의 너비 안에서 무작위 분포
+          const x = center.x + (Math.random() - 0.5) * size.x * 0.8;
+          const z = center.z + (Math.random() - 0.5) * size.z * 0.8;
+          // Y는 맨 아래에서 약간 위아래로 흩어지게
+          const y = bottomY + Math.random() * 20; 
+          
+          dustVertices.push(x, y, z);
+          dustSpeeds.push(Math.random() * 0.4 + 0.2); // 파티클마다 서로 다른 상승 속도 부여
+        }
+        
+        dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(dustVertices, 3));
+        
+        // 황금빛 발광 재질
+        const dustMat = new THREE.PointsMaterial({
+          color: 0xffdd44, 
+          size: 0.25, // 크기를 0.25로 대폭 축소하여 미세한 가루처럼 보이게 함
+          transparent: true,
+          opacity: 1.0,
+          blending: THREE.AdditiveBlending
+        });
+        
+        const dustPoints = new THREE.Points(dustGeo, dustMat);
+        brainGroup.add(dustPoints);
+        
+        window.bdnfParticles.push({
+          mesh: dustPoints,
+          speeds: dustSpeeds,
+          life: 1.0
+        });
+      });
+      
+      // [F. 새로운 기술 학습 미니게임 (데스크톱: 키보드 / 모바일: 스와이프)]
+      const minigameUI = document.getElementById('minigame-ui');
+      const minigameKeys = document.getElementById('minigame-keys');
+      const minigameDesc = document.getElementById('minigame-desc');
+      let isPlaying = false;
+      let currentSequence = [];
+      let currentIndex = 0;
+      window.newNeuronsArray = [];
+      
+      // 모바일 감지
+      const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      
+      document.getElementById('btn-learn').addEventListener('click', () => {
+        if (isPlaying) return;
+        isPlaying = true;
+        controls.enabled = false;
+        
+        if (isMobile) {
+          // 모바일: 스와이프 방향 패턴 생성
+          const possibleDirs = ['↑', '↓', '←', '→'];
+          const length = Math.floor(Math.random() * 2) + 3; // 3~4개
+          currentSequence = [];
+          for (let i = 0; i < length; i++) {
+            currentSequence.push(possibleDirs[Math.floor(Math.random() * possibleDirs.length)]);
+          }
+          minigameDesc.textContent = '화살표 방향으로 스와이프하세요!';
+        } else {
+          // 데스크톱: 키보드 패턴 생성
+          const possibleKeys = ['W', 'A', 'S', 'D', 'J', 'K', 'L'];
+          const length = Math.floor(Math.random() * 3) + 3; // 3~5
+          currentSequence = [];
+          for (let i = 0; i < length; i++) {
+            currentSequence.push(possibleKeys[Math.floor(Math.random() * possibleKeys.length)]);
+          }
+          minigameDesc.textContent = '화면에 나타난 키를 순서대로 타이핑하세요!';
+        }
+        
+        currentIndex = 0;
+        updateMinigameUI();
+        minigameUI.style.display = 'block';
+      });
+      
+      function updateMinigameUI() {
+        let html = '';
+        for (let i = 0; i < currentSequence.length; i++) {
+          if (i < currentIndex) {
+            html += `<span style="color: #555;">${currentSequence[i]}</span>`;
+          } else if (i === currentIndex) {
+            html += `<span style="color: #44ffaa; text-shadow: 0 0 15px #44ffaa;">${currentSequence[i]}</span>`;
+          } else {
+            html += `<span style="color: white;">${currentSequence[i]}</span>`;
+          }
+        }
+        minigameKeys.innerHTML = html;
+      }
+      
+      // 정답 처리 함수 (키보드/스와이프 공용)
+      function handleMinigameInput(input) {
+        if (!isPlaying) return;
+        
+        if (input === currentSequence[currentIndex]) {
+          currentIndex++;
+          if (currentIndex >= currentSequence.length) {
+            successMinigame();
+          } else {
+            updateMinigameUI();
+          }
+        } else {
+          minigameUI.style.borderColor = '#ff4444';
+          setTimeout(() => { minigameUI.style.borderColor = '#2a7a5a'; }, 200);
+        }
+      }
+      
+      // 데스크톱: 키보드 입력
+      window.addEventListener('keydown', (e) => {
+        handleMinigameInput(e.key.toUpperCase());
+      });
+      
+      // 모바일: 스와이프 감지
+      let touchStartX = 0;
+      let touchStartY = 0;
+      
+      window.addEventListener('touchstart', (e) => {
+        if (!isPlaying) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+      
+      window.addEventListener('touchend', (e) => {
+        if (!isPlaying) return;
+        
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        const minSwipe = 30;
+        
+        if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+        
+        let direction;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          direction = dx > 0 ? '→' : '←';
+        } else {
+          direction = dy > 0 ? '↓' : '↑';
+        }
+        
+        handleMinigameInput(direction);
+      }, { passive: true });
+      
+      function successMinigame() {
+        isPlaying = false;
+        minigameUI.style.display = 'none';
+        controls.enabled = true; // 화면 회전 복구
+        
+        // 1. 무작위 위치에 크고 푸른 '새로운 뉴런(3D 모델)' 생성
+        const nx = window.brainCenter.x + (Math.random() - 0.5) * window.brainSize.x * 0.5;
+        const ny = window.brainCenter.y + (Math.random() - 0.5) * window.brainSize.y * 0.5;
+        const nz = window.brainCenter.z + (Math.random() - 0.5) * window.brainSize.z * 0.5;
+        
+        const newNeuron = window.neuronModelTemplate.clone();
+        newNeuron.position.set(nx, ny, nz);
+        newNeuron.scale.set(0.005, 0.005, 0.005); // 일반 뉴런보다 3배 큼
+        newNeuron.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        
+        newNeuron.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x00aaff, // 밝은 파랑
+              emissive: 0x0033aa, // 자체 발광
+              roughness: 0.2,
+              metalness: 0.8
+            });
+          }
+        });
+        
+        brainGroup.add(newNeuron);
+        
+        // 2. 기존 뉴런 중 3개와 연결되는 굵고 밝은 시냅스 생성
+        const newLines = [];
+        for (let c = 0; c < 3; c++) {
+          const targetIdx = Math.floor(Math.random() * numNeurons);
+          newLines.push(
+            nx, ny, nz,
+            vertices[targetIdx * 3], vertices[targetIdx * 3 + 1], vertices[targetIdx * 3 + 2]
+          );
+        }
+        
+        const lineGeo = new THREE.BufferGeometry();
+        lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(newLines, 3));
+        const lineMat = new THREE.LineBasicMaterial({
+          color: 0x00aaff,
+          transparent: true,
+          opacity: 0.9,
+          blending: THREE.AdditiveBlending
+        });
+        const strongSynapses = new THREE.LineSegments(lineGeo, lineMat);
+        brainGroup.add(strongSynapses);
+        
+        // 3. 펌핑 애니메이션을 위해 배열에 추가
+        window.newNeuronsArray.push({
+          mesh: newNeuron,
+          scaleTime: 0
+        });
+      }
+      
+      // [G. 우주 진입(Warp) 버튼 이벤트]
+      document.getElementById('btn-universe').addEventListener('click', () => {
+        if (window.isTransitioning) return;
+        
+        window.isInsideBrain = !window.isInsideBrain;
+        window.isTransitioning = true;
+        controls.enabled = false; // 전환 중 카메라 조작 방지
+        
+        // 전환 시작 시점의 카메라 위치 저장 (사용자가 회전한 방향 유지)
+        if (!window.startCamPos) {
+          window.startCamPos = camera.position.clone();
+        } else {
+          // 이미 저장된 위치가 있다면 현재 위치로 갱신 (밖에서 안으로 갈때만 갱신)
+          if (window.isInsideBrain) {
+            window.startCamPos.copy(camera.position);
+          }
+        }
+        
+        const btn = document.getElementById('btn-universe');
+        if (window.isInsideBrain) {
+          btn.innerHTML = '🔙 뇌 밖으로 빠져나오기';
+          btn.style.background = 'linear-gradient(135deg, #4a0000, #800000)';
+          btn.style.borderColor = '#e22b2b';
+          btn.style.boxShadow = '0 0 15px rgba(226,43,43,0.5)';
+          window.universeGroup.visible = true; // 우주 배경 활성화
+        } else {
+          btn.innerHTML = '🌌 뇌 속으로 들어가기';
+          btn.style.background = 'linear-gradient(135deg, #1e004a, #4a0080)';
+          btn.style.borderColor = '#8a2be2';
+          btn.style.boxShadow = '0 0 15px rgba(138,43,226,0.5)';
+        }
+      });
+      
+    }).catch(function (error) {
+      console.error("모델 로딩 오류:", error);
+      document.getElementById('loading').innerHTML = `
+        <div style="color: #ff6666; font-size: 18px; text-align: center; line-height: 1.5;">
+          오류: 3D 모델(glb) 파일을 불러올 수 없습니다.<br>
+          <span style="font-size: 14px; color: #ccc;">
+            서버에 <b>human-brain.glb</b> 및 <b>neuron.glb</b> 파일이 함께 업로드되었는지 확인해주세요.
+          </span>
+        </div>
+      `;
+    });
+
+    // 7. 윈도우 리사이즈 이벤트 처리
+    window.addEventListener('resize', onWindowResize, false);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // 8. 렌더링 루프 (애니메이션)
+    const baseBgColor = new THREE.Color(0x05050a);
+    const cosmicBgColor = new THREE.Color(0x030010);
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // 뇌와 내부 뉴런 전체가 함께 천천히 회전
+      brainGroup.rotation.y += 0.003;
+      
+      // 우주 배경도 매우 천천히 회전 (신비로운 효과)
+      if (window.universeGroup && window.universeGroup.visible) {
+        window.universeGroup.rotation.y += 0.0005;
+        window.universeGroup.rotation.x += 0.0002;
+      }
+      
+      // [우주 전환 애니메이션(Lerp) 로직]
+      if (window.isTransitioning) {
+        const speed = 0.12; // 전환 속도 (너무 빠르지 않게 살짝 감속)
+        
+        if (window.isInsideBrain) {
+          window.transitionProgress += speed;
+          if (window.transitionProgress >= 1.0) {
+            window.transitionProgress = 1.0;
+            window.isTransitioning = false;
+            controls.enabled = true; // 전환 완료 후 컨트롤 복구
+          }
+        } else {
+          window.transitionProgress -= speed;
+          if (window.transitionProgress <= 0.0) {
+            window.transitionProgress = 0.0;
+            window.isTransitioning = false;
+            controls.enabled = true; // 전환 완료 후 컨트롤 복구
+            window.universeGroup.visible = false; // 완전히 밖으로 나오면 파티클 끄기
+          }
+        }
+        
+        // 부드러운 가감속을 위한 Ease-in-out (Sine) 적용
+        const easeProgress = -(Math.cos(Math.PI * window.transitionProgress) - 1) / 2;
+        
+        // 1. 카메라 거리 줌인/줌아웃 보간 (사용자의 현재 시점 방향 유지)
+        // 뇌 중심(0,0,0)까지 매우 깊숙히 들어감 (크기에 비례하여 5% 거리까지)
+        const targetDist = window.baseCameraZ * 0.05; 
+        const startDist = window.startCamPos ? window.startCamPos.length() : window.baseCameraZ;
+        const currentDist = startDist * (1 - easeProgress) + targetDist * easeProgress;
+        
+        // 현재 위치 방향으로 거리만 조절
+        if (window.startCamPos) {
+          camera.position.copy(window.startCamPos).normalize().multiplyScalar(currentDist);
+        }
+        
+        // 2. 뇌 껍질(외피) 페이드 아웃/인 및 거대화(Scale) 보간
+        if (window.brainModel) {
+          const sliderVal = document.getElementById('opacity-slider').value / 100;
+          const targetOpacity = sliderVal * (1 - easeProgress);
+          
+          // 껍질이 페이드아웃 되면서 동시에 엄청나게 커지는(팽창하는) 효과
+          const expandScale = 1.0 + easeProgress * 3.0; // 1배에서 최대 4배까지 팽창
+          window.brainModel.scale.set(expandScale, expandScale, expandScale);
+          
+          window.brainModel.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.opacity = Math.max(0, targetOpacity);
+              child.material.depthWrite = (targetOpacity === 1.0);
+              child.visible = targetOpacity > 0;
+            }
+          });
+        }
+        
+        // 3. 우주 배경 파티클 페이드 인/아웃 보간
+        if (window.starMat) {
+          window.starMat.opacity = easeProgress;
+        }
+        
+        // 4. 배경색 보간 (어두운 회색 -> 딥 보라/우주색)
+        scene.background.lerpColors(baseBgColor, cosmicBgColor, easeProgress);
+      }
+      
+      // 번쩍이는 시냅스 및 뉴런 노드 애니메이션 처리
+      for (let i = window.flashingSynapses.length - 1; i >= 0; i--) {
+        let fs = window.flashingSynapses[i];
+        fs.life -= 0.015; // 서서히 흐려짐 (속도 조절)
+        
+        if (fs.life <= 0.1) {
+          // 완전히 흐려지면 고정된 기본 시냅스 색상(어두운 회색)으로 변경하고 애니메이션 추적에서 제외
+          fs.mesh.material.color.setHex(0x888899);
+          fs.mesh.material.opacity = 0.4;
+          fs.mesh.material.blending = THREE.NormalBlending;
+          
+          // 뉴런 노드들 원래 재질로 복구
+          if (fs.nodes) {
+            fs.nodes.forEach(mesh => {
+              mesh.traverse(child => {
+                if (child.isMesh && child.userData.originalMat) {
+                  child.material = child.userData.originalMat;
+                }
+              });
+            });
+          }
+          
+          window.flashingSynapses.splice(i, 1);
+        } else {
+          // 선 투명도 감소
+          fs.mesh.material.opacity = fs.life;
+          
+          // 뉴런 노드 발광 강도 감소
+          if (fs.nodes) {
+            fs.nodes.forEach(mesh => {
+              mesh.traverse(child => {
+                if (child.isMesh && child.material.emissive) {
+                  child.material.emissiveIntensity = fs.life * 1.5; // 생동감 있게 감소
+                }
+              });
+            });
+          }
+        }
+      }
+      
+      // BDNF(황금빛 가루) 상승 애니메이션 처리
+      for (let i = window.bdnfParticles.length - 1; i >= 0; i--) {
+        let bdnf = window.bdnfParticles[i];
+        bdnf.life -= 0.005; // 천천히 수명 감소
+        
+        const positions = bdnf.mesh.geometry.attributes.position.array;
+        // 각 파티클 위치 업데이트
+        for (let j = 0; j < positions.length / 3; j++) {
+          positions[j * 3 + 1] += bdnf.speeds[j]; // Y축(위)으로 상승
+          // X축, Z축으로 미세하게 흔들리면서 올라감 (아지랑이 효과)
+          positions[j * 3] += (Math.random() - 0.5) * 0.3;
+          positions[j * 3 + 2] += (Math.random() - 0.5) * 0.3;
+        }
+        bdnf.mesh.geometry.attributes.position.needsUpdate = true;
+        
+        if (bdnf.life <= 0) {
+          // 수명이 다하면 씬에서 완전히 제거
+          brainGroup.remove(bdnf.mesh);
+          bdnf.mesh.geometry.dispose();
+          bdnf.mesh.material.dispose();
+          window.bdnfParticles.splice(i, 1);
+        } else {
+          // 위로 올라갈수록 서서히 투명해짐
+          bdnf.mesh.material.opacity = bdnf.life;
+        }
+      }
+      
+      // 새로 생성된 거대 뉴런의 두근거리는(Pumping) 애니메이션
+      if (window.newNeuronsArray) {
+        for (let nn of window.newNeuronsArray) {
+          if (nn.scaleTime < Math.PI) { // 한번만 팽창했다가 수축
+            nn.scaleTime += 0.1;
+            // 초기 스케일 0.005를 기준으로 펌핑되도록 수정
+            const baseScale = 0.005;
+            const scale = baseScale * (1.0 + Math.sin(nn.scaleTime) * 1.5); 
+            nn.mesh.scale.set(scale, scale, scale);
+          }
+        }
+      }
+      
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+  </script>
+</body>
+</html>

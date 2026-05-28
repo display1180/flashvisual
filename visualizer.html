@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Hiroshi Yoshimura - CREEK 3D Visualization</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000; /* 깊은 우주 배경 */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      z-index: 10;
+      background: rgba(20, 20, 30, 0.8);
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+    }
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 15px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateX(5px);
+    }
+    .active-btn {
+      background: rgba(100, 200, 255, 0.3) !important;
+      border-color: rgba(100, 200, 255, 0.8) !important;
+    }
+    .hint {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 15px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <h3>3D Music Visualizer</h3>
+    <button id="playBtn">▶ Play / Pause</button>
+    <div style="margin-top: 15px; margin-bottom: 5px; font-size: 13px; color: #ccc;">Visual Modes:</div>
+    <button id="mode1Btn" class="active-btn">Mode 1: Spiritual Core</button>
+    <button id="mode2Btn">Mode 2: Cosmic Tunnel</button>
+    <button id="mode3Btn">Mode 3: Language Whisper</button>
+    <button id="mode4Btn">Mode 4: Brain Garden</button>
+    
+    <div id="brainwaveLegend" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+      <div style="font-size: 12px; margin-bottom: 8px; color: #ccc;">Brainwave Index:</div>
+      <div style="font-size: 11px; display: flex; align-items: center; margin-bottom: 4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:rgb(150, 50, 255); margin-right:8px; box-shadow: 0 0 5px rgb(150, 50, 255);"></span> Delta (Deep Sleep)</div>
+      <div style="font-size: 11px; display: flex; align-items: center; margin-bottom: 4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:rgb(50, 150, 255); margin-right:8px; box-shadow: 0 0 5px rgb(50, 150, 255);"></span> Theta (Meditation)</div>
+      <div style="font-size: 11px; display: flex; align-items: center; margin-bottom: 4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:rgb(50, 255, 150); margin-right:8px; box-shadow: 0 0 5px rgb(50, 255, 150);"></span> Alpha (Relaxation)</div>
+      <div style="font-size: 11px; display: flex; align-items: center; margin-bottom: 4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:rgb(255, 200, 50); margin-right:8px; box-shadow: 0 0 5px rgb(255, 200, 50);"></span> Beta (Focus)</div>
+      <div style="font-size: 11px; display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:rgb(255, 100, 200); margin-right:8px; box-shadow: 0 0 5px rgb(255, 100, 200);"></span> Gamma (Insight)</div>
+    </div>
+
+    <div class="hint">
+      * 캔버스를 클릭하는 대신 위 버튼으로 재생하세요.<br>
+      * 화면을 드래그하여 3D 시점을 돌려볼 수 있습니다.
+    </div>
+  </div>
+  <script src="visualizer.js"></script>
+</body>
+</html>
