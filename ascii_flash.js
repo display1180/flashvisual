@@ -18,7 +18,7 @@ const CHAR_SETS = {
 };
 const ALL_CHARS = CHAR_SETS.dense + CHAR_SETS.ascii + CHAR_SETS.kanji + CHAR_SETS.symbols;
 
-let CELL = 14;           // character cell size
+let CELL = 22;           // character cell size
 let cols, rows;
 let time = 0;
 let renderMode = 0;      // 0-4

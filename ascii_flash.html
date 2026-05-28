@@ -20,6 +20,8 @@
       top: 0; left: 0;
       z-index: 1;
       mix-blend-mode: screen; /* To show youtube background */
+      will-change: transform, opacity;
+      transform: translateZ(0); /* Hardware acceleration */
     }
 
     #youtube-bg {
