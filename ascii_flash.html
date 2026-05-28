@@ -19,6 +19,26 @@
       position: fixed;
       top: 0; left: 0;
       z-index: 1;
+      mix-blend-mode: screen; /* To show youtube background */
+    }
+
+    #youtube-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    #youtube-bg iframe {
+      width: 100vw;
+      height: 100vh;
+      transform: scale(1.15); /* hide youtube branding/bars */
+      border: none;
+      pointer-events: none;
     }
 
     /* ── Flash overlay for strobe effect ── */
@@ -226,6 +246,9 @@
 </head>
 <body>
 
+  <div id="youtube-bg">
+    <iframe src="https://www.youtube.com/embed/7M_8AMuCK6k?autoplay=1&mute=1&loop=1&playlist=7M_8AMuCK6k&controls=0&showinfo=0&rel=0" allow="autoplay" allowfullscreen></iframe>
+  </div>
   <canvas id="main-canvas"></canvas>
   <div id="flash-layer"></div>
 
@@ -297,6 +320,9 @@
       <button class="mode-btn" data-mode="38">A, Heartbeat</button>
       <button class="mode-btn" data-mode="39">A, Love Rain</button>
       <button class="mode-btn" data-mode="40">A, Neon Love</button>
+      <button class="mode-btn" data-mode="41">B, Magnetic</button>
+      <button class="mode-btn" data-mode="42">B, Radar</button>
+      <button class="mode-btn" data-mode="43">B, Burning</button>
     </div>
   </div>
 
