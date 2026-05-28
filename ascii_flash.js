@@ -190,7 +190,7 @@ function setMode(m) {
   renderMode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.mode-btn')[m]?.classList.add('active');
-  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO'];
+  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO', 'A, HEARTBEAT', 'A, LOVE RAIN', 'A, NEON LOVE'];
   hudMode.textContent = names[m];
   hudMode.style.color = getModePrimaryColor(m);
 
@@ -207,7 +207,7 @@ function setMode(m) {
 }
 
 function getModePrimaryColor(m) {
-  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa'];
+  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa', '#ff0055', '#ffccff', '#ff00aa'];
   return colors[m];
 }
 
@@ -313,6 +313,9 @@ function loop(timestamp) {
     case 35: renderIDCScroll(dt); break;
     case 36: renderIDCChaos(dt);  break;
     case 37: renderIDCTypo(dt);   break;
+    case 38: renderAHeartbeat(dt); break;
+    case 39: renderALoveRain(dt); break;
+    case 40: renderANeonLove(dt); break;
   }
 
   // HUD update (every 8 frames)
@@ -2621,8 +2624,8 @@ function renderSkeletonCrew(dt) {
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const spacingX = 14;
-  const spacingY = 10;
+  const spacingX = 8;
+  const spacingY = 8;
 
   for (let gy = 0; gy < rows; gy += spacingY) {
     for (let gx = 0; gx < cols; gx += spacingX) {
@@ -2678,7 +2681,7 @@ function renderXraySpine(dt) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw 3 spines across the screen
-  const spineCenters = [cols * 0.25, cols * 0.5, cols * 0.75];
+  const spineCenters = [cols * 0.1, cols * 0.3, cols * 0.5, cols * 0.7, cols * 0.9];
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -2847,6 +2850,136 @@ function renderIDCTypo(dt) {
     ctx.strokeText(lines[i], cx + shakeX, cy + yOffset + shakeY);
   }
 
+  ctx.textAlign = 'start';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 38: A, HEARTBEAT (Pulsing Heart)
+// ═══════════════════════════════════════════════════════
+function renderAHeartbeat(dt) {
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+
+  const t = time * 3 * speedMult;
+  
+  ctx.fillStyle = '#110005';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = cols / 2;
+  const cy = rows / 2;
+  
+  // Heartbeat pulse math
+  const pulse = Math.pow(Math.abs(Math.sin(t)), 4) * 3;
+  const size = 12 + pulse;
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      // Map coordinates to standard heart equation
+      // (x^2 + y^2 - 1)^3 - x^2 * y^3 = 0
+      const hx = (x - cx) / size;
+      const hy = -(y - cy) / size + 0.3; // Invert y because canvas y goes down
+
+      const eq = Math.pow(hx*hx + hy*hy - 1, 3) - hx*hx * hy*hy*hy;
+
+      if (eq <= 0) {
+        // Inside heart
+        const hue = 340 + Math.random() * 20; // Pinks and reds
+        const lum = 50 + pulse * 10 + Math.random() * 20;
+        ctx.fillStyle = hslToStr(hue, 100, lum);
+        
+        const chars = ["A", ",", "I", "L", "O", "V", "E", "Y", "O", "U"];
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(ch, x * CELL + CELL/2, y * CELL + CELL/2);
+      } else {
+        // Outside heart (faint aura)
+        if (eq < 1.0 && Math.random() < 0.1) {
+          ctx.fillStyle = hslToStr(350, 80, 20);
+          ctx.fillText("♥", x * CELL + CELL/2, y * CELL + CELL/2);
+        }
+      }
+    }
+  }
+  ctx.textAlign = 'start';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 39: A, LOVE RAIN (Matrix style but romantic)
+// ═══════════════════════════════════════════════════════
+function renderALoveRain(dt) {
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const t = time * 10 * speedMult;
+  
+  // Motion blur / trail
+  ctx.fillStyle = 'rgba(10, 0, 5, 0.2)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const words = ["A,", "I", "LOVE", "YOU"];
+
+  for (let x = 0; x < cols; x++) {
+    // Random offset and speed for each column
+    const colSpeed = Math.sin(x * 123.45) * 0.5 + 1.0;
+    const colOffset = Math.sin(x * 321.12) * 1000;
+    
+    const dropY = (t * colSpeed + colOffset) % (rows + 20) - 20;
+
+    for (let i = 0; i < 4; i++) { // Draw a short stream
+      const y = Math.floor(dropY - i * 2);
+      if (y >= 0 && y < rows) {
+        const wordIndex = Math.floor(Math.abs(x * y)) % words.length;
+        const text = words[wordIndex];
+        
+        const hue = 330 + (x % 30);
+        // Head of the drop is bright, tail is dark
+        const lum = i === 0 ? 90 : (60 - i * 15);
+        
+        ctx.fillStyle = hslToStr(hue, 80, lum);
+        ctx.fillText(text[Math.floor(dropY) % text.length] || "♥", x * CELL, y * CELL);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 40: A, NEON LOVE (Flickering Sign)
+// ═══════════════════════════════════════════════════════
+function renderANeonLove(dt) {
+  const t = time * 5 * speedMult;
+  
+  ctx.fillStyle = '#020005';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  // Flickering effect (faulty neon tube)
+  const flicker = Math.random() < 0.05 ? 0.2 : (Math.sin(t) * 0.1 + 0.9);
+  
+  ctx.font = `italic bold ${Math.floor(CELL * 6)}px sans-serif`;
+
+  const text = "A, I LOVE YOU";
+
+  // Glow / Blur layers
+  for (let i = 5; i >= 1; i--) {
+    const blur = i * 4 * flicker;
+    ctx.shadowBlur = blur;
+    ctx.shadowColor = hslToStr(320, 100, 50 * flicker);
+    
+    // Core color
+    const lum = i === 1 ? (80 + 20 * flicker) : 40 * flicker;
+    ctx.fillStyle = hslToStr(330, 100, lum);
+    
+    // Draw with slight offset for 3D neon tube effect
+    ctx.fillText(text, cx + (i-1)*2, cy + (i-1)*2);
+  }
+  
+  // Reset shadow
+  ctx.shadowBlur = 0;
   ctx.textAlign = 'start';
 }
 
