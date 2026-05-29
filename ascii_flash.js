@@ -13,7 +13,7 @@ const CHAR_SETS = {
   ascii:   '@#$%&*+=~^!?/\\|(){}[]<>',
   minimal: '.·:;+*#@',
   blocks:  '█▓▒░ ',
-  kanji:   '電影光閃雷暗夢幻星月火水風',
+  kanji:   '66DAYS66DAYS66DAYS66DAYS66DAYSSIXDAYS!@#$%',
   symbols: '◈◉◎●○◐◑◒◓◔◕◖◗◘◙◚◛',
 };
 const ALL_CHARS = CHAR_SETS.dense + CHAR_SETS.ascii + CHAR_SETS.kanji + CHAR_SETS.symbols;
@@ -22,8 +22,17 @@ let CELL = 22;           // character cell size
 let cols, rows;
 let time = 0;
 let renderMode = 0;      // 0-4
-let speedMult = 1.0;
 let isStarted = false;
+let speedMult = 1.0;
+
+// Global Background Toggles
+let bgVideoEnabled = true;
+let bgWebcamEnabled = false;
+
+// VJ Tool state
+let videoX = 0, videoY = 0, videoScale = 1.15;
+let isDraggingVideo = false;
+let lastMouseX = 0, lastMouseY = 0;
 let mouseX = 0, mouseY = 0;
 let mouseNX = 0.5, mouseNY = 0.5;  // normalized 0-1
 
@@ -89,6 +98,42 @@ let currentFps = 60;
 // ── HUD elements (cached) ──
 let hudMode, hudSpeed, hudChars, hudHue, fpsDisplay;
 
+// ── Webcam state ──
+let webcamVideo;
+let webcamCanvas;
+let webcamCtx;
+let isWebcamReady = false;
+let webcamRipple1 = [];
+let webcamRipple2 = [];
+let prevFrameData = null;
+let rippleWidth = 0;
+let rippleHeight = 0;
+
+function initWebcam() {
+  if (isWebcamReady) return;
+  webcamVideo = document.getElementById('webcam-video');
+  webcamCanvas = document.getElementById('webcam-canvas');
+  webcamCtx = webcamCanvas.getContext('2d', { willReadFrequently: true });
+  
+  navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+    .then(stream => {
+      webcamVideo.srcObject = stream;
+      webcamVideo.play();
+      isWebcamReady = true;
+      // Initialize ripple buffers using the ascii grid size
+      rippleWidth = cols;
+      rippleHeight = rows;
+      webcamCanvas.width = rippleWidth;
+      webcamCanvas.height = rippleHeight;
+      webcamRipple1 = new Float32Array(rippleWidth * rippleHeight);
+      webcamRipple2 = new Float32Array(rippleWidth * rippleHeight);
+    })
+    .catch(err => {
+      console.error("Camera access denied or unavailable", err);
+      alert("Camera access is required for WEBCAM LIQUID mode.");
+    });
+}
+
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
@@ -107,6 +152,34 @@ function init() {
     mouseY = e.clientY;
     mouseNX = e.clientX / window.innerWidth;
     mouseNY = e.clientY / window.innerHeight;
+    
+    if (isDraggingVideo) {
+      videoX += e.clientX - lastMouseX;
+      videoY += e.clientY - lastMouseY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      updateVideoTransform();
+    }
+  });
+
+  window.addEventListener('mousedown', e => {
+    if (!isStarted) return;
+    if (e.target.closest('#hud') || e.target.closest('#bottom-ui-wrapper')) return;
+    isDraggingVideo = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDraggingVideo = false;
+  });
+
+  window.addEventListener('wheel', e => {
+    if (!isStarted) return;
+    if (e.target.closest('#hud') || e.target.closest('#bottom-ui-wrapper')) return;
+    videoScale += e.deltaY * -0.001;
+    videoScale = Math.max(0.2, Math.min(videoScale, 10)); // limit zoom
+    updateVideoTransform();
   });
 
   // Keyboard shortcuts
@@ -118,6 +191,13 @@ function init() {
     if (e.key === ' ') {
       e.preventDefault();
       triggerFlash();
+    }
+    if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen();
+      }
     }
   });
 
@@ -145,6 +225,61 @@ function init() {
   document.getElementById('speed-slider').addEventListener('input', e => {
     speedMult = parseFloat(e.target.value);
   });
+
+  // Fullscreen button
+  document.getElementById('fullscreen-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.log(err));
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  document.getElementById('toggle-video-btn')?.addEventListener('click', () => {
+    bgVideoEnabled = !bgVideoEnabled;
+    updateBackgrounds();
+  });
+
+  document.getElementById('toggle-webcam-btn')?.addEventListener('click', () => {
+    bgWebcamEnabled = !bgWebcamEnabled;
+    updateBackgrounds();
+  });
+}
+
+function updateBackgrounds() {
+  const ytBg = document.getElementById('youtube-bg');
+  const wv = document.getElementById('webcam-video');
+
+  const isWebcamEffectMode = renderMode >= 44 && renderMode <= 47;
+  const isRawOverlayMode = renderMode === 48;
+
+  if (isWebcamEffectMode) {
+    if (ytBg) ytBg.style.opacity = '0';
+    if (wv) { wv.style.display = 'block'; wv.style.opacity = '0'; }
+    canvas.style.mixBlendMode = 'normal';
+  } else if (isRawOverlayMode) {
+    if (ytBg) ytBg.style.opacity = '0';
+    if (wv) { wv.style.display = 'block'; wv.style.opacity = '1'; }
+    canvas.style.mixBlendMode = 'normal';
+  } else {
+    // Normal Modes (0-43)
+    if (ytBg) {
+      ytBg.style.opacity = bgVideoEnabled ? '1' : '0';
+      ytBg.style.display = bgVideoEnabled ? 'block' : 'none';
+    }
+    if (wv) {
+      if (bgWebcamEnabled) {
+        if (!isWebcamReady) initWebcam();
+        wv.style.display = 'block';
+        wv.style.opacity = '1';
+        canvas.style.mixBlendMode = 'screen';
+      } else {
+        wv.style.display = 'none';
+        wv.style.opacity = '0';
+        canvas.style.mixBlendMode = 'screen';
+      }
+    }
+  }
 }
 
 function resize() {
@@ -153,6 +288,13 @@ function resize() {
   cols = Math.floor(canvas.width / CELL);
   rows = Math.floor(canvas.height / CELL);
   initMatrixDrops();
+}
+
+function updateVideoTransform() {
+  const yt = document.querySelector('#youtube-bg iframe');
+  if (yt) {
+    yt.style.transform = `translate(${videoX}px, ${videoY}px) scale(${videoScale})`;
+  }
 }
 
 function initMatrixDrops() {
@@ -190,9 +332,16 @@ function setMode(m) {
   renderMode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.mode-btn')[m]?.classList.add('active');
-  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO', 'A, HEARTBEAT', 'A, LOVE RAIN', 'A, NEON LOVE', 'B, MAGNETIC', 'B, RADAR', 'B, BURNING'];
+  const names = ['PLASMA', 'VORTEX', 'MATRIX', 'SHOCKWAVE', 'GLITCH', 'DECODE', 'SWARM', 'HYPERSPACE', 'RADAR', 'BIOLUM', 'OVERRIDE', 'MELTDOWN', 'INFECTED', 'CRITICAL', 'PRISM', 'CHROMATIC', 'DISCO', 'JULIA', 'SIERPINSKI', 'RECURSION', 'STATIC', 'TEARING', 'DATABEND', 'NEURAL', 'SYMBIOSIS', 'SINGULARITY', 'HALO', 'FEATHERS', 'DIVINE', 'TENSOR', 'SCANNER', 'SENTIENCE', 'RAVE SKULL', 'SKELETON CREW', 'X-RAY SPINE', 'IDC SCROLL', 'IDC CHAOS', 'IDC TYPO', 'A, HEARTBEAT', 'A, LOVE RAIN', 'A, NEON LOVE', 'B, MAGNETIC', 'B, RADAR', 'B, BURNING', 'CAM MOTION', 'CAM THERMAL', 'CAM PIXELSORT', 'CAM SILHOUETTE', 'RAW + ASCII'];
   hudMode.textContent = names[m];
   hudMode.style.color = getModePrimaryColor(m);
+
+  const isWebcamMode = m >= 44 && m <= 48;
+  if (isWebcamMode) {
+    if (!isWebcamReady) initWebcam();
+  }
+  
+  updateBackgrounds();
 
   // Reset mode-specific state
   if (m === 2) initMatrixDrops();
@@ -207,7 +356,7 @@ function setMode(m) {
 }
 
 function getModePrimaryColor(m) {
-  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa', '#ff0055', '#ffccff', '#ff00aa', '#cc00ff', '#00ff00', '#ff5500'];
+  const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffaa00', '#ff0040', '#ffff00', '#ff00aa', '#ffffff', '#00ff41', '#55ff22', '#00cc00', '#ff0000', '#ff1100', '#ff0033', '#ffffff', '#00ffff', '#ff00ff', '#aa00ff', '#00ffaa', '#ffaa00', '#888888', '#00ffff', '#ffff00', '#ffaa00', '#ff00ff', '#ffffff', '#ffd700', '#ffccff', '#00ccff', '#00ff88', '#ffff00', '#ff0055', '#ff00ff', '#00ffcc', '#ffffff', '#ff3300', '#ffffff', '#ff00aa', '#ff0055', '#ffccff', '#ff00aa', '#cc00ff', '#00ff00', '#ff5500', '#00ccff', '#ff4400', '#ff00ff', '#00ffaa', '#ffffff'];
   return colors[m];
 }
 
@@ -319,6 +468,11 @@ function loop(timestamp) {
     case 41: renderBMagnetic(dt); break;
     case 42: renderBRadar(dt); break;
     case 43: renderBBurning(dt); break;
+    case 44: renderWebcamLiquid(dt); break;
+    case 45: renderWebcamThermal(dt); break;
+    case 46: renderWebcamPixelsort(dt); break;
+    case 47: renderWebcamSilhouette(dt); break;
+    case 48: renderWebcamRawOverlay(dt); break;
   }
 
   // HUD update (every 8 frames)
@@ -3181,6 +3335,442 @@ function renderBBurning(dt) {
         const shakeY = isText ? 0 : (Math.random() - 0.5) * 4;
         ctx.fillText(ch, x * CELL, y * CELL + shakeY);
       }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 44: WEBCAM LIQUID
+// ═══════════════════════════════════════════════════════
+function renderWebcamLiquid(dt) {
+  if (!isWebcamReady || webcamVideo.readyState < 2) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0cf';
+    ctx.font = '24px monospace';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText("WAITING FOR CAMERA...", canvas.width/2, canvas.height/2);
+    ctx.textAlign = 'left';
+    return;
+  }
+
+  // Ensure buffers match current cols/rows if window was resized
+  if (rippleWidth !== cols || rippleHeight !== rows) {
+    rippleWidth = cols;
+    rippleHeight = rows;
+    webcamCanvas.width = rippleWidth;
+    webcamCanvas.height = rippleHeight;
+    webcamRipple1 = new Float32Array(rippleWidth * rippleHeight);
+    webcamRipple2 = new Float32Array(rippleWidth * rippleHeight);
+    prevFrameData = null;
+  }
+
+  // Draw current webcam frame to offscreen canvas
+  webcamCtx.drawImage(webcamVideo, 0, 0, rippleWidth, rippleHeight);
+  const frame = webcamCtx.getImageData(0, 0, rippleWidth, rippleHeight);
+  const data = frame.data;
+
+  // Build motion map
+  const motionMap = new Float32Array(rippleWidth * rippleHeight);
+  if (prevFrameData) {
+    for (let i = 0; i < data.length; i += 4) {
+      const luma1 = data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114;
+      const luma2 = prevFrameData[i] * 0.299 + prevFrameData[i+1] * 0.587 + prevFrameData[i+2] * 0.114;
+      const diff = Math.abs(luma1 - luma2);
+      if (diff > 15) {
+        motionMap[i / 4] = diff / 255;
+      }
+    }
+  }
+
+  prevFrameData = new Uint8ClampedArray(data);
+
+  // ── Dramatic Motion-Reactive Rendering ──
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textBaseline = 'top';
+
+  const glitchChars = '█▓▒░◆◇●○★☆▲△♦♠♣♥@#$%&*+=~^!?/\\|<>66DAYS66DAYS66DAYSSIXDAYS';
+  const ramp = '.:-=+*#%@█';
+  const t = time;
+
+  const scanY = Math.floor((t * 80) % rows);
+  const scanHeight = 3;
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = x + y * rippleWidth;
+      const motion = motionMap[idx];
+      const inScanline = Math.abs(y - scanY) < scanHeight;
+
+      const mx = rippleWidth - 1 - x;
+      const pi = (mx + y * rippleWidth) * 4;
+      const r = data[pi], g = data[pi+1], b = data[pi+2];
+      const luma = r * 0.299 + g * 0.587 + b * 0.114;
+
+      let ch, color, fontSize;
+
+      if (motion <= 0 && !inScanline) {
+        // Base dense ASCII for static parts
+        fontSize = CELL;
+        const charIdx = Math.floor((luma / 255) * (ramp.length - 1));
+        ch = ramp[charIdx];
+        color = `rgb(${r},${g},${b})`;
+      } else if (motion > 0.5) {
+        // ── HEAVY MOTION: Neon glitch explosion ──
+        fontSize = CELL + Math.floor(Math.random() * 8);
+        ch = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        const hue = (globalHue + motion * 720 + x * 7 + y * 13) % 360;
+        color = `hsl(${hue}, 100%, ${50 + motion * 40}%)`;
+      } else if (motion > 0.2) {
+        // ── MEDIUM MOTION: Color-shifted ASCII ──
+        fontSize = CELL + 2;
+        const charIdx = Math.min(ramp.length - 1, Math.floor(motion * ramp.length));
+        ch = ramp[charIdx];
+        const shift = Math.sin(t * 3 + x * 0.5) * 80;
+        const cr = Math.min(255, r + shift + 60);
+        const cg = Math.min(255, g - shift * 0.5 + 60);
+        const cb = Math.min(255, b + shift * 0.3 + 100);
+        color = `rgb(${Math.max(0,cr)},${Math.max(0,cg)},${Math.max(0,cb)})`;
+      } else if (motion > 0) {
+        // ── LIGHT MOTION: Subtle tinted dots ──
+        fontSize = CELL;
+        ch = ramp[Math.floor((luma / 255) * (ramp.length - 1))];
+        const hue = (globalHue + y * 3) % 360;
+        color = `hsl(${hue}, 60%, ${40 + motion * 30}%)`;
+      } else if (inScanline) {
+        // ── SCANLINE NOISE ──
+        fontSize = CELL;
+        if (Math.random() > 0.7) {
+          ch = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+          const noiseBright = 20 + Math.random() * 30;
+          color = `hsl(${(globalHue + 180) % 360}, 80%, ${noiseBright}%)`;
+        } else {
+          ch = ramp[Math.floor((luma / 255) * (ramp.length - 1))];
+          color = `rgb(${r},${g},${b})`;
+        }
+      }
+
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.fillStyle = color;
+
+      // Chromatic aberration offset for heavy motion
+      if (motion > 0.4) {
+        const offset = Math.floor(motion * 6);
+        // Red ghost (left)
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = `rgba(255,0,100,0.5)`;
+        ctx.fillText(ch, x * CELL - offset, y * CELL);
+        // Cyan ghost (right)
+        ctx.fillStyle = `rgba(0,255,255,0.5)`;
+        ctx.fillText(ch, x * CELL + offset, y * CELL);
+        // Main character
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = color;
+      }
+
+      ctx.fillText(ch, x * CELL, y * CELL);
+    }
+  }
+  ctx.globalAlpha = 1.0;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 45: CAM THERMAL — Heat Vision
+// ═══════════════════════════════════════════════════════
+function renderWebcamThermal(dt) {
+  if (!isWebcamReady || webcamVideo.readyState < 2) {
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#f40'; ctx.font = '24px monospace'; ctx.textAlign = 'center';
+    ctx.fillText("INITIALIZING THERMAL SENSOR...", canvas.width/2, canvas.height/2);
+    ctx.textAlign = 'left'; return;
+  }
+  if (rippleWidth !== cols || rippleHeight !== rows) {
+    rippleWidth = cols; rippleHeight = rows;
+    webcamCanvas.width = rippleWidth; webcamCanvas.height = rippleHeight;
+    prevFrameData = null;
+  }
+  webcamCtx.drawImage(webcamVideo, 0, 0, rippleWidth, rippleHeight);
+  const frame = webcamCtx.getImageData(0, 0, rippleWidth, rippleHeight);
+  const data = frame.data;
+
+  // Build motion heat map (accumulates over time)
+  if (!this._heatMap) this._heatMap = new Float32Array(rippleWidth * rippleHeight);
+  const heatMap = this._heatMap;
+
+  if (prevFrameData) {
+    for (let i = 0; i < data.length; i += 4) {
+      const luma1 = data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
+      const luma2 = prevFrameData[i]*0.299 + prevFrameData[i+1]*0.587 + prevFrameData[i+2]*0.114;
+      const diff = Math.abs(luma1 - luma2) / 255;
+      const idx = i / 4;
+      heatMap[idx] = Math.min(1, heatMap[idx] + diff * 2.0); // Heat up
+    }
+  }
+  // Cool down
+  for (let i = 0; i < heatMap.length; i++) {
+    heatMap[i] *= 0.92;
+  }
+  prevFrameData = new Uint8ClampedArray(data);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const thermalRamp = '·:;+*%#█';
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = x + y * rippleWidth;
+      const heat = heatMap[idx];
+      const mx = rippleWidth - 1 - x;
+      const pi = (mx + y * rippleWidth) * 4;
+      const luma = (data[pi]*0.299 + data[pi+1]*0.587 + data[pi+2]*0.114) / 255;
+
+      // Combine body luminance and motion heat
+      const intensity = Math.min(1, luma * 0.4 + heat * 2.5);
+      
+      const charIdx = Math.floor(intensity * (thermalRamp.length - 1));
+      const ch = thermalRamp[Math.max(0, Math.min(thermalRamp.length-1, charIdx))];
+
+      // Thermal color: blue(cold) → green → yellow → orange → red → white(hot)
+      let r, g, b;
+      if (intensity < 0.2) {
+        r = 0; g = 0; b = Math.floor(intensity * 5 * 180);
+      } else if (intensity < 0.4) {
+        const t = (intensity - 0.2) * 5;
+        r = 0; g = Math.floor(t * 200); b = Math.floor(180 - t * 180);
+      } else if (intensity < 0.6) {
+        const t = (intensity - 0.4) * 5;
+        r = Math.floor(t * 255); g = 200; b = 0;
+      } else if (intensity < 0.8) {
+        const t = (intensity - 0.6) * 5;
+        r = 255; g = Math.floor(200 - t * 150); b = 0;
+      } else {
+        const t = (intensity - 0.8) * 5;
+        r = 255; g = Math.floor(50 + t * 205); b = Math.floor(t * 255);
+      }
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillText(ch, x * CELL, y * CELL);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 46: CAM PIXELSORT — Glitch Art Sorting
+// ═══════════════════════════════════════════════════════
+function renderWebcamPixelsort(dt) {
+  if (!isWebcamReady || webcamVideo.readyState < 2) {
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#f0f'; ctx.font = '24px monospace'; ctx.textAlign = 'center';
+    ctx.fillText("SORTING PIXELS...", canvas.width/2, canvas.height/2);
+    ctx.textAlign = 'left'; return;
+  }
+  if (rippleWidth !== cols || rippleHeight !== rows) {
+    rippleWidth = cols; rippleHeight = rows;
+    webcamCanvas.width = rippleWidth; webcamCanvas.height = rippleHeight;
+    prevFrameData = null;
+  }
+  webcamCtx.drawImage(webcamVideo, 0, 0, rippleWidth, rippleHeight);
+  const frame = webcamCtx.getImageData(0, 0, rippleWidth, rippleHeight);
+  const data = frame.data;
+
+  // Motion detection
+  const motionMap = new Float32Array(rippleWidth * rippleHeight);
+  if (prevFrameData) {
+    for (let i = 0; i < data.length; i += 4) {
+      const l1 = data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
+      const l2 = prevFrameData[i]*0.299 + prevFrameData[i+1]*0.587 + prevFrameData[i+2]*0.114;
+      motionMap[i/4] = Math.abs(l1-l2)/255;
+    }
+  }
+  prevFrameData = new Uint8ClampedArray(data);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const sortChars = '░▒▓█│║╔╗╚╝═╬╩╦╠╣';
+  const ramp = '.:-=+*#%@█';
+  const t = time;
+
+  // Pixel sort direction oscillates
+  const sortAngle = Math.sin(t * 0.3) * 0.5;
+
+  for (let y = 0; y < rows; y++) {
+    // Determine sort threshold for this row (varies with time)
+    const rowThresh = 0.3 + Math.sin(y * 0.2 + t * 2) * 0.2;
+    let sorting = false;
+    let sortLen = 0;
+
+    for (let x = 0; x < cols; x++) {
+      const mx = rippleWidth - 1 - x;
+      const idx = mx + y * rippleWidth;
+      const pi = idx * 4;
+      const r = data[pi], g = data[pi+1], b = data[pi+2];
+      const luma = (r*0.299 + g*0.587 + b*0.114) / 255;
+      const motion = motionMap[x + y * rippleWidth];
+
+      // Start/stop sorting based on brightness threshold
+      if (luma > rowThresh && motion > 0.02) {
+        sorting = true;
+        sortLen++;
+      } else {
+        sorting = false;
+        sortLen = 0;
+      }
+
+      if (sorting) {
+        // Pixel sort effect: stretch and distort
+        const stretch = Math.min(15, sortLen);
+        const srcX = Math.max(0, Math.min(rippleWidth-1, mx - stretch));
+        const srcIdx = (srcX + y * rippleWidth) * 4;
+        const sr = data[srcIdx], sg = data[srcIdx+1], sb = data[srcIdx+2];
+
+        const ch = sortChars[Math.floor(Math.random() * sortChars.length)];
+
+        // Neon magenta/cyan shift based on sort length
+        const hue = (sortLen * 20 + globalHue) % 360;
+        const sat = 100;
+        const lum = 40 + stretch * 4;
+        ctx.fillStyle = `hsl(${hue}, ${sat}%, ${lum}%)`;
+        ctx.fillText(ch, x * CELL, y * CELL);
+
+      } else {
+        // Base dense ASCII for non-moving parts
+        const ch = ramp[Math.floor(luma * (ramp.length-1))];
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillText(ch, x * CELL, y * CELL);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 47: CAM SILHOUETTE — Neon Outline with Trails
+// ═══════════════════════════════════════════════════════
+function renderWebcamSilhouette(dt) {
+  if (!isWebcamReady || webcamVideo.readyState < 2) {
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#0fa'; ctx.font = '24px monospace'; ctx.textAlign = 'center';
+    ctx.fillText("SCANNING SILHOUETTE...", canvas.width/2, canvas.height/2);
+    ctx.textAlign = 'left'; return;
+  }
+  if (rippleWidth !== cols || rippleHeight !== rows) {
+    rippleWidth = cols; rippleHeight = rows;
+    webcamCanvas.width = rippleWidth; webcamCanvas.height = rippleHeight;
+    prevFrameData = null;
+  }
+  webcamCtx.drawImage(webcamVideo, 0, 0, rippleWidth, rippleHeight);
+  const frame = webcamCtx.getImageData(0, 0, rippleWidth, rippleHeight);
+  const data = frame.data;
+
+  // Persistent trail buffer
+  if (!this._trailBuf) this._trailBuf = new Float32Array(rippleWidth * rippleHeight * 3);
+  const trail = this._trailBuf;
+
+  // Motion
+  const motionMap = new Float32Array(rippleWidth * rippleHeight);
+  if (prevFrameData) {
+    for (let i = 0; i < data.length; i += 4) {
+      const l1 = data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;
+      const l2 = prevFrameData[i]*0.299+prevFrameData[i+1]*0.587+prevFrameData[i+2]*0.114;
+      motionMap[i/4] = Math.abs(l1-l2)/255;
+    }
+  }
+  prevFrameData = new Uint8ClampedArray(data);
+
+  // Fade trail
+  // Don't fully clear — use semi-transparent rect for ghosting
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const outlineChars = '◇◆○●□■△▲▽▼';
+  const t = time;
+
+  for (let y = 1; y < rows - 1; y++) {
+    for (let x = 1; x < cols - 1; x++) {
+      const mx = rippleWidth - 1 - x;
+      const motion = motionMap[x + y * rippleWidth];
+
+      // Sobel edge on luma for silhouette outline
+      const getL = (gx, gy) => {
+        const gi = (gx + gy * rippleWidth) * 4;
+        return data[gi]*0.299 + data[gi+1]*0.587 + data[gi+2]*0.114;
+      };
+      const mx0 = Math.max(0,mx-1), mx2 = Math.min(rippleWidth-1,mx+1);
+      const gx = getL(mx2,y-1)+2*getL(mx2,y)+getL(mx2,y+1)
+               - getL(mx0,y-1)-2*getL(mx0,y)-getL(mx0,y+1);
+      const gy2 = getL(mx0,y+1)+2*getL(mx,y+1)+getL(mx2,y+1)
+                - getL(mx0,y-1)-2*getL(mx,y-1)-getL(mx2,y-1);
+      const edge = Math.sqrt(gx*gx + gy2*gy2) / 255;
+
+      // Draw base dense silhouette mapping
+      let ch, color, fontSize = CELL;
+
+      if (edge > 0.25 || motion > 0.08) {
+        ch = outlineChars[Math.floor(Math.random() * outlineChars.length)];
+        const hue = (x * 5 + y * 3 + globalHue + t * 60) % 360;
+        const brightness = edge > 0.4 ? 70 : 40 + motion * 200;
+        color = `hsl(${hue}, 100%, ${Math.min(85, brightness)}%)`;
+        if (edge > 0.5) fontSize = CELL + 4;
+      } else {
+        const luma = getL(mx, y) / 255;
+        const ramp = '.:-=+*#%@';
+        ch = ramp[Math.floor(luma * (ramp.length - 1))];
+        color = `rgba(0,255,170, ${luma * 0.3})`; // Ghostly green baseline
+      }
+
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.fillStyle = color;
+      ctx.fillText(ch, x * CELL, y * CELL);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE 48: CAM RAW + ASCII — Subtle Overlay
+// ═══════════════════════════════════════════════════════
+function renderWebcamRawOverlay(dt) {
+  if (!isWebcamReady || webcamVideo.readyState < 2) {
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fff'; ctx.font = '24px monospace'; ctx.textAlign = 'center';
+    ctx.fillText("LOADING CAMERA...", canvas.width/2, canvas.height/2);
+    ctx.textAlign = 'left'; return;
+  }
+  if (rippleWidth !== cols || rippleHeight !== rows) {
+    rippleWidth = cols; rippleHeight = rows;
+    webcamCanvas.width = rippleWidth; webcamCanvas.height = rippleHeight;
+  }
+  webcamCtx.drawImage(webcamVideo, 0, 0, rippleWidth, rippleHeight);
+  const frame = webcamCtx.getImageData(0, 0, rippleWidth, rippleHeight);
+  const data = frame.data;
+
+  // Clear transparently so the raw video shows behind!
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${CELL}px monospace`;
+  ctx.textBaseline = 'top';
+
+  const ramp = ' .:-=+*#%@';
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const mx = rippleWidth - 1 - x;
+      const pi = (mx + y * rippleWidth) * 4;
+      const r = data[pi], g = data[pi+1], b = data[pi+2];
+      const luma = (r*0.299 + g*0.587 + b*0.114) / 255;
+
+      // Draw subtle ASCII text on top
+      const ch = ramp[Math.floor(luma * (ramp.length - 1))];
+      
+      // Make the ASCII text slightly bright and highly transparent
+      ctx.fillStyle = `rgba(255, 255, 255, 0.25)`;
+      ctx.fillText(ch, x * CELL, y * CELL);
     }
   }
 }

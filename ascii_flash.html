@@ -37,10 +37,26 @@
 
     #youtube-bg iframe {
       width: 100vw;
-      height: 100vh;
-      transform: scale(1.15); /* hide youtube branding/bars */
-      border: none;
+      height: 56.25vw;
+      min-height: 100vh;
+      min-width: 177.77vh;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       pointer-events: none;
+    }
+
+    #webcam-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+      transform: scaleX(-1); /* Mirror the webcam feed */
     }
 
     /* ── Flash overlay for strobe effect ── */
@@ -244,15 +260,20 @@
       cursor: pointer;
       box-shadow: 0 0 10px rgba(255,255,255,0.3);
     }
+    }
   </style>
 </head>
 <body>
-
+  <!-- YouTube Background -->
   <div id="youtube-bg">
-    <iframe src="https://www.youtube.com/embed/7M_8AMuCK6k?autoplay=1&mute=1&loop=1&playlist=7M_8AMuCK6k&controls=0&showinfo=0&rel=0" allow="autoplay" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/7M_8AMuCK6k?autoplay=1&mute=1&loop=1&playlist=7M_8AMuCK6k&controls=0&showinfo=0&rel=0&enablejsapi=1" allow="autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   </div>
   <canvas id="main-canvas"></canvas>
   <div id="flash-layer"></div>
+
+  <!-- Webcam Elements -->
+  <video id="webcam-video" autoplay playsinline style="display:none;"></video>
+  <canvas id="webcam-canvas" style="display:none;"></canvas>
 
   <!-- Start Screen -->
   <div id="start-overlay">
@@ -277,6 +298,9 @@
     <div id="speed-panel">
       <label>Speed</label>
       <input type="range" id="speed-slider" min="0.2" max="3" step="0.1" value="1">
+      <button id="fullscreen-btn" class="mode-btn" style="margin-left: 20px;">⛶ FULLSCREEN (F)</button>
+      <button id="toggle-video-btn" class="mode-btn" style="margin-left: 10px;">🎥 TOGGLE VIDEO</button>
+      <button id="toggle-webcam-btn" class="mode-btn" style="margin-left: 10px;">📷 TOGGLE WEBCAM</button>
     </div>
 
     <!-- Mode Buttons -->
@@ -325,6 +349,11 @@
       <button class="mode-btn" data-mode="41">B, Magnetic</button>
       <button class="mode-btn" data-mode="42">B, Radar</button>
       <button class="mode-btn" data-mode="43">B, Burning</button>
+      <button class="mode-btn" data-mode="44" style="border-color: #0cf; color: #0cf;">📷 Cam Motion</button>
+      <button class="mode-btn" data-mode="45" style="border-color: #ff4400; color: #ff4400;">🔥 Cam Thermal</button>
+      <button class="mode-btn" data-mode="46" style="border-color: #ff00ff; color: #ff00ff;">⚡ Cam Pixelsort</button>
+      <button class="mode-btn" data-mode="47" style="border-color: #00ffaa; color: #00ffaa;">👤 Cam Silhouette</button>
+      <button class="mode-btn" data-mode="48" style="border-color: #ffffff; color: #ffffff;">👁️ Raw + ASCII</button>
     </div>
   </div>
 
