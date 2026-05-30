@@ -115,7 +115,7 @@ function initWebcam() {
   webcamCanvas = document.getElementById('webcam-canvas');
   webcamCtx = webcamCanvas.getContext('2d', { willReadFrequently: true });
   
-  navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
     .then(stream => {
       webcamVideo.srcObject = stream;
       webcamVideo.play();
@@ -266,6 +266,23 @@ function init() {
   document.getElementById('toggle-webcam-btn')?.addEventListener('click', () => {
     bgWebcamEnabled = !bgWebcamEnabled;
     updateBackgrounds();
+  });
+
+  document.getElementById('full-cam-btn')?.addEventListener('click', () => {
+    if (!isWebcamReady) initWebcam();
+    const wv = document.getElementById('webcam-video');
+    if (wv) {
+      wv.classList.add('fullscreen-overlay');
+      wv.style.display = 'block';
+      wv.style.opacity = '1';
+    }
+  });
+
+  document.getElementById('webcam-video')?.addEventListener('click', function() {
+    if (this.classList.contains('fullscreen-overlay')) {
+      this.classList.remove('fullscreen-overlay');
+      updateBackgrounds(); // Restore based on toggles
+    }
   });
 }
 
