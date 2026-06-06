@@ -311,6 +311,20 @@ function init() {
       updateBackgrounds(); // Restore based on toggles
     }
   });
+
+  const uiToggleBtn = document.getElementById('ui-toggle-btn');
+  function toggleUI() {
+    const isHidden = document.body.classList.toggle('ui-hidden');
+    uiToggleBtn.textContent = isHidden ? '👁️ SHOW UI (H)' : '👁️ HIDE UI (H)';
+    uiToggleBtn.style.opacity = isHidden ? '0.2' : '1';
+  }
+  uiToggleBtn?.addEventListener('click', toggleUI);
+  
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'h' || e.key === 'H') && isStarted) {
+      toggleUI();
+    }
+  });
 }
 
 function updateBackgrounds() {
@@ -389,6 +403,7 @@ function startExperience() {
   document.getElementById('hud').classList.add('visible');
   document.getElementById('mode-panel').classList.add('visible');
   document.getElementById('speed-panel').classList.add('visible');
+  document.getElementById('ui-toggle-btn').style.display = 'block';
   fpsDisplay.classList.add('visible');
 
   // Ensure YouTube video starts playing if it was blocked by autoplay policies

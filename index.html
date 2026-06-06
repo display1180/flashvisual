@@ -273,6 +273,31 @@
       opacity: 1 !important;
       display: block !important;
     }
+    #ui-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.5);
+      padding: 6px 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: none;
+    }
+    #ui-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .ui-hidden #hud,
+    .ui-hidden #fps-display,
+    .ui-hidden #bottom-ui-wrapper {
+      display: none !important;
+    }
     }
   </style>
 </head>
@@ -283,6 +308,9 @@
   </div>
   <canvas id="main-canvas"></canvas>
   <div id="flash-layer"></div>
+
+  <!-- UI Toggle Button -->
+  <button id="ui-toggle-btn">👁️ HIDE UI (H)</button>
 
   <!-- Webcam Elements -->
   <video id="webcam-video" autoplay playsinline style="display:none;"></video>
