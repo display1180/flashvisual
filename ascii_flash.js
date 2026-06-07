@@ -99,7 +99,7 @@ let currentFps = 60;
 let isHandTrackingActive = false;
 let handLandmarks = [];
 let handsInstance = null;
-let cameraInstance = null;
+let handTrackingProcessing = false;
 let handCanvas = null;
 let handCtx = null;
 let handParticles = []; // To store particle effects
@@ -127,21 +127,27 @@ async function initHandTracking() {
   handsInstance.onResults((results) => {
     handLandmarks = results.multiHandLandmarks || [];
   });
-
-  const videoElement = document.getElementById('webcam-video');
-  cameraInstance = new Camera(videoElement, {
-    onFrame: async () => {
-      if (isHandTrackingActive && videoElement.videoWidth > 0) {
-        await handsInstance.send({image: videoElement});
-      }
-    },
-    width: 640,
-    height: 480
-  });
   
-  if (isWebcamReady) {
-    cameraInstance.start();
+  // Start custom frame sending loop
+  sendHandTrackingFrame();
+}
+
+async function sendHandTrackingFrame() {
+  if (!isHandTrackingActive) return;
+  const videoElement = document.getElementById('webcam-video');
+  
+  if (videoElement && isWebcamReady && videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
+    if (!handTrackingProcessing && handsInstance) {
+      handTrackingProcessing = true;
+      try {
+        await handsInstance.send({image: videoElement});
+      } catch (e) {
+        console.error("Hands instance send error:", e);
+      }
+      handTrackingProcessing = false;
+    }
   }
+  requestAnimationFrame(sendHandTrackingFrame);
 }
 
 // ── HUD elements (cached) ──
@@ -196,8 +202,8 @@ function initWebcam() {
       webcamVideo.srcObject = stream;
       webcamVideo.play();
       isWebcamReady = true;
-      if (isHandTrackingActive && cameraInstance) {
-        cameraInstance.start();
+      if (isHandTrackingActive && !handTrackingProcessing) {
+        sendHandTrackingFrame();
       }
       // Initialize ripple buffers using the ascii grid size
       rippleWidth = cols;
@@ -399,7 +405,7 @@ function init() {
       this.style.color = '#000';
       if (!isWebcamReady) initWebcam();
       initHandTracking();
-      if (cameraInstance && isWebcamReady) cameraInstance.start();
+      if (isWebcamReady) sendHandTrackingFrame();
     } else {
       this.classList.remove('active');
       this.style.background = 'transparent';
