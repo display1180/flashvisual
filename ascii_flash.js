@@ -462,12 +462,10 @@ function playClip(clip) {
   if (clip.type === 'youtube') {
     local1.style.opacity = 0;
     local2.style.opacity = 0;
-    setTimeout(() => {
-      local1.style.display = 'none';
-      local2.style.display = 'none';
-      local1.pause();
-      local2.pause();
-    }, 500);
+    local1.style.display = 'none';
+    local2.style.display = 'none';
+    local1.pause();
+    local2.pause();
     ytPlayer.style.display = 'block';
     ytPlayer.src = `https://www.youtube.com/embed/${clip.src}?autoplay=1&mute=1&loop=1&playlist=${clip.src}&controls=0&showinfo=0&rel=0&enablejsapi=1`;
   } else if (clip.type === 'local') {
@@ -483,10 +481,8 @@ function playClip(clip) {
       nextPlayer.play().then(() => {
         nextPlayer.style.opacity = 1;
         currPlayer.style.opacity = 0;
-        setTimeout(() => {
-          currPlayer.style.display = 'none';
-          currPlayer.pause();
-        }, 500);
+        currPlayer.style.display = 'none';
+        currPlayer.pause();
         window.activeLocalPlayer = window.activeLocalPlayer === 1 ? 2 : 1;
       }).catch(e => console.log("Auto-play prevented", e));
       nextPlayer.onloadeddata = null;
