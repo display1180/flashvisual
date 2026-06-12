@@ -314,7 +314,8 @@
   <!-- Background Media Player -->
   <div id="media-bg">
     <iframe id="youtube-player" src="https://www.youtube.com/embed/e2trxT-Z8C0?autoplay=1&mute=1&loop=1&playlist=e2trxT-Z8C0&controls=0&showinfo=0&rel=0&enablejsapi=1" allow="autoplay; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="display: block;"></iframe>
-    <video id="local-player" class="local-bg" loop autoplay muted playsinline style="display: none; width: 100vw; height: 100vh; object-fit: cover;"></video>
+    <video id="local-player-1" class="local-bg" loop autoplay muted playsinline style="display: none; width: 100vw; height: 100vh; object-fit: cover; position: absolute; top: 0; left: 0; transition: opacity 0.5s ease; opacity: 1;"></video>
+    <video id="local-player-2" class="local-bg" loop autoplay muted playsinline style="display: none; width: 100vw; height: 100vh; object-fit: cover; position: absolute; top: 0; left: 0; transition: opacity 0.5s ease; opacity: 0;"></video>
   </div>
   <canvas id="main-canvas"></canvas>
   <div id="flash-layer"></div>
@@ -433,6 +434,6 @@
     </div>
   </div>
 
-  <script src="ascii_flash.js?v=3"></script>
+  <script src="ascii_flash.js?v=4"></script>
 </body>
 </html>

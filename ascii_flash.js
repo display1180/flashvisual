@@ -330,7 +330,7 @@ function init() {
   window.ytIsPaused = false;
   document.getElementById('play-pause-btn')?.addEventListener('click', () => {
     const yt = document.getElementById('youtube-player');
-    const local = document.getElementById('local-player');
+    const local = window.activeLocalPlayer === 1 ? document.getElementById('local-player-1') : document.getElementById('local-player-2');
     
     if (yt && yt.style.display !== 'none' && yt.contentWindow) {
       if (!window.ytIsPaused) {
@@ -351,7 +351,7 @@ function init() {
 
   document.getElementById('replay-btn')?.addEventListener('click', () => {
     const yt = document.getElementById('youtube-player');
-    const local = document.getElementById('local-player');
+    const local = window.activeLocalPlayer === 1 ? document.getElementById('local-player-1') : document.getElementById('local-player-2');
     
     if (yt && yt.style.display !== 'none' && yt.contentWindow) {
       yt.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
@@ -452,21 +452,45 @@ const VJ_CLIPS = [
   { id: 'yt_default', type: 'youtube', src: 'e2trxT-Z8C0', label: '3: TAME IMPALA (YT)' }
 ];
 
+window.activeLocalPlayer = 1;
+
 function playClip(clip) {
   const ytPlayer = document.getElementById('youtube-player');
-  const localPlayer = document.getElementById('local-player');
+  const local1 = document.getElementById('local-player-1');
+  const local2 = document.getElementById('local-player-2');
   
   if (clip.type === 'youtube') {
-    localPlayer.style.display = 'none';
-    localPlayer.pause();
+    local1.style.opacity = 0;
+    local2.style.opacity = 0;
+    setTimeout(() => {
+      local1.style.display = 'none';
+      local2.style.display = 'none';
+      local1.pause();
+      local2.pause();
+    }, 500);
     ytPlayer.style.display = 'block';
     ytPlayer.src = `https://www.youtube.com/embed/${clip.src}?autoplay=1&mute=1&loop=1&playlist=${clip.src}&controls=0&showinfo=0&rel=0&enablejsapi=1`;
   } else if (clip.type === 'local') {
     ytPlayer.style.display = 'none';
     ytPlayer.src = ''; // Stop youtube video
-    localPlayer.style.display = 'block';
-    localPlayer.src = clip.src;
-    localPlayer.play().catch(e => console.log("Auto-play prevented", e));
+    
+    const nextPlayer = window.activeLocalPlayer === 1 ? local2 : local1;
+    const currPlayer = window.activeLocalPlayer === 1 ? local1 : local2;
+    
+    nextPlayer.style.display = 'block';
+    nextPlayer.src = clip.src;
+    nextPlayer.onloadeddata = () => {
+      nextPlayer.play().then(() => {
+        nextPlayer.style.opacity = 1;
+        currPlayer.style.opacity = 0;
+        setTimeout(() => {
+          currPlayer.style.display = 'none';
+          currPlayer.pause();
+        }, 500);
+        window.activeLocalPlayer = window.activeLocalPlayer === 1 ? 2 : 1;
+      }).catch(e => console.log("Auto-play prevented", e));
+      nextPlayer.onloadeddata = null;
+    };
   }
 }
 
@@ -600,7 +624,9 @@ function startExperience() {
     window.ytIsPaused = false;
   }
   
-  const localPlayer = document.getElementById('local-player');
+  const local1 = document.getElementById('local-player-1');
+  const local2 = document.getElementById('local-player-2');
+  const localPlayer = window.activeLocalPlayer === 1 ? local1 : local2;
   if (localPlayer && localPlayer.style.display !== 'none') {
     localPlayer.play().catch(() => {});
   }
