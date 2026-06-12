@@ -212,11 +212,10 @@
 
     /* ── Mode Panel ── */
     #mode-panel {
-      width: 100%;
-      justify-content: center;
-      flex-wrap: wrap;
       display: flex;
-      gap: 6px; /* 버튼 간격 살짝 줄임 */
+      flex-wrap: wrap;
+      gap: 6px;
+      align-content: flex-start;
       opacity: 0;
       transition: opacity 1s;
       pointer-events: none;
@@ -360,78 +359,83 @@
       <button id="hand-tracking-btn" class="mode-btn" style="margin-left: 10px; border-color: #ff00ff; color: #ff00ff;">🖐️ HAND TRACKING</button>
     </div>
 
-    <!-- VJ Clip Deck -->
-    <div id="clip-deck" style="width: 100vw; max-height: 25vh; background: rgba(0,0,0,0.85); overflow-y: auto; padding: 15px; border-top: 1px solid #333; pointer-events: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <label style="color: #00ffaa; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">Media Deck (209 Clips)</label>
-        <div style="display: flex; gap: 5px; align-items: center;">
-          <input type="text" id="yt-url-input" placeholder="YouTube URL..." style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #fff; padding: 4px 8px; width: 150px; font-family: 'Space Mono', monospace; font-size: 10px; outline: none; border-radius: 2px;">
-          <button id="yt-submit-btn" class="mode-btn" style="border-color: #ffd700; color: #ffd700; padding: 3px 8px;">GO</button>
+    <!-- Bottom Split Panels -->
+    <div style="display: flex; width: 100%; height: 25vh; border-top: 1px solid #333; pointer-events: auto;">
+      <!-- Left: Media Deck -->
+      <div id="clip-deck" style="width: 50%; height: 100%; background: rgba(0,0,0,0.85); overflow-y: auto; padding: 10px; box-sizing: border-box; border-right: 1px solid #333;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; position: sticky; top: 0; background: rgba(0,0,0,0.95); padding: 4px 0; z-index: 1;">
+          <label style="color: #00ffaa; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">📂 Media Deck</label>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <input type="text" id="yt-url-input" placeholder="YouTube URL..." style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #fff; padding: 4px 8px; width: 120px; font-family: 'Space Mono', monospace; font-size: 10px; outline: none; border-radius: 2px;">
+            <button id="yt-submit-btn" class="mode-btn" style="border-color: #ffd700; color: #ffd700; padding: 3px 8px;">GO</button>
+          </div>
+        </div>
+        <div id="clip-buttons" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px;">
+          <!-- Buttons injected by JS -->
         </div>
       </div>
-      <div id="clip-buttons" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px;">
-        <!-- Buttons injected by JS -->
+      <!-- Right: Effects -->
+      <div style="width: 50%; height: 100%; background: rgba(0,0,0,0.85); overflow-y: auto; padding: 10px; box-sizing: border-box;">
+        <label style="color: #ff00ff; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 8px; position: sticky; top: 0; background: rgba(0,0,0,0.95); padding: 4px 0; z-index: 1;">🎨 Effects</label>
+        <div id="mode-panel">
+          <button class="mode-btn active" data-mode="0">Plasma</button>
+          <button class="mode-btn" data-mode="1">Vortex</button>
+          <button class="mode-btn" data-mode="2">Matrix</button>
+          <button class="mode-btn" data-mode="3">Shockwave</button>
+          <button class="mode-btn" data-mode="4">Glitch</button>
+          <button class="mode-btn" data-mode="5">Decode</button>
+          <button class="mode-btn" data-mode="6">Swarm</button>
+          <button class="mode-btn" data-mode="7">Hyperspace</button>
+          <button class="mode-btn" data-mode="8">Radar</button>
+          <button class="mode-btn" data-mode="9">Biolum</button>
+          <button class="mode-btn" data-mode="10">Override</button>
+          <button class="mode-btn" data-mode="11">Meltdown</button>
+          <button class="mode-btn" data-mode="12">Infected</button>
+          <button class="mode-btn" data-mode="13">Critical</button>
+          <button class="mode-btn" data-mode="14">Prism</button>
+          <button class="mode-btn" data-mode="15">Chromatic</button>
+          <button class="mode-btn" data-mode="16">Disco</button>
+          <button class="mode-btn" data-mode="17">Julia</button>
+          <button class="mode-btn" data-mode="18">Sierpinski</button>
+          <button class="mode-btn" data-mode="19">Recursion</button>
+          <button class="mode-btn" data-mode="20">Static</button>
+          <button class="mode-btn" data-mode="21">Tearing</button>
+          <button class="mode-btn" data-mode="22">Databend</button>
+          <button class="mode-btn" data-mode="23">Neural</button>
+          <button class="mode-btn" data-mode="24">Symbiosis</button>
+          <button class="mode-btn" data-mode="25">Singularity</button>
+          <button class="mode-btn" data-mode="26">Halo</button>
+          <button class="mode-btn" data-mode="27">Feathers</button>
+          <button class="mode-btn" data-mode="28">Divine</button>
+          <button class="mode-btn" data-mode="29">Tensor</button>
+          <button class="mode-btn" data-mode="30">Scanner</button>
+          <button class="mode-btn" data-mode="31">Sentience</button>
+          <button class="mode-btn" data-mode="32">Rave Skull</button>
+          <button class="mode-btn" data-mode="33">Skeleton Crew</button>
+          <button class="mode-btn" data-mode="34">X-Ray Spine</button>
+          <button class="mode-btn" data-mode="35">IDC Scroll</button>
+          <button class="mode-btn" data-mode="36">IDC Chaos</button>
+          <button class="mode-btn" data-mode="37">IDC Typo</button>
+          <button class="mode-btn" data-mode="38">A, Heartbeat</button>
+          <button class="mode-btn" data-mode="39">A, Love Rain</button>
+          <button class="mode-btn" data-mode="40">A, Neon Love</button>
+          <button class="mode-btn" data-mode="41">B, Magnetic</button>
+          <button class="mode-btn" data-mode="42">B, Radar</button>
+          <button class="mode-btn" data-mode="43">B, Burning</button>
+          <button class="mode-btn" data-mode="44" style="border-color: #0cf; color: #0cf;">📷 Cam Motion</button>
+          <button class="mode-btn" data-mode="45" style="border-color: #ff4400; color: #ff4400;">🔥 Cam Thermal</button>
+          <button class="mode-btn" data-mode="46" style="border-color: #ff00ff; color: #ff00ff;">⚡ Cam Pixelsort</button>
+          <button class="mode-btn" data-mode="47" style="border-color: #00ffaa; color: #00ffaa;">👤 Cam Silhouette</button>
+          <button class="mode-btn" data-mode="48" style="border-color: #ffffff; color: #ffffff;">👁️ Raw + ASCII</button>
+          <div style="width: 100%; height: 6px;"></div>
+          <button class="mode-btn" data-mode="49" style="border-color: #ff88aa; color: #ff88aa;">💔 C, I MISS YOU</button>
+          <button class="mode-btn" data-mode="50" style="border-color: #00bbff; color: #00bbff;">💧 C, TEARDROPS</button>
+          <button class="mode-btn" data-mode="51" style="border-color: #aa88ff; color: #aa88ff;">📼 C, MEMORY</button>
+        </div>
       </div>
-    </div>
-
-    <!-- Mode Buttons -->
-    <div id="mode-panel">
-      <button class="mode-btn active" data-mode="0">Plasma</button>
-      <button class="mode-btn" data-mode="1">Vortex</button>
-      <button class="mode-btn" data-mode="2">Matrix</button>
-      <button class="mode-btn" data-mode="3">Shockwave</button>
-      <button class="mode-btn" data-mode="4">Glitch</button>
-      <button class="mode-btn" data-mode="5">Decode</button>
-      <button class="mode-btn" data-mode="6">Swarm</button>
-      <button class="mode-btn" data-mode="7">Hyperspace</button>
-      <button class="mode-btn" data-mode="8">Radar</button>
-      <button class="mode-btn" data-mode="9">Biolum</button>
-      <button class="mode-btn" data-mode="10">Override</button>
-      <button class="mode-btn" data-mode="11">Meltdown</button>
-      <button class="mode-btn" data-mode="12">Infected</button>
-      <button class="mode-btn" data-mode="13">Critical</button>
-      <button class="mode-btn" data-mode="14">Prism</button>
-      <button class="mode-btn" data-mode="15">Chromatic</button>
-      <button class="mode-btn" data-mode="16">Disco</button>
-      <button class="mode-btn" data-mode="17">Julia</button>
-      <button class="mode-btn" data-mode="18">Sierpinski</button>
-      <button class="mode-btn" data-mode="19">Recursion</button>
-      <button class="mode-btn" data-mode="20">Static</button>
-      <button class="mode-btn" data-mode="21">Tearing</button>
-      <button class="mode-btn" data-mode="22">Databend</button>
-      <button class="mode-btn" data-mode="23">Neural</button>
-      <button class="mode-btn" data-mode="24">Symbiosis</button>
-      <button class="mode-btn" data-mode="25">Singularity</button>
-      <button class="mode-btn" data-mode="26">Halo</button>
-      <button class="mode-btn" data-mode="27">Feathers</button>
-      <button class="mode-btn" data-mode="28">Divine</button>
-      <button class="mode-btn" data-mode="29">Tensor</button>
-      <button class="mode-btn" data-mode="30">Scanner</button>
-      <button class="mode-btn" data-mode="31">Sentience</button>
-      <button class="mode-btn" data-mode="32">Rave Skull</button>
-      <button class="mode-btn" data-mode="33">Skeleton Crew</button>
-      <button class="mode-btn" data-mode="34">X-Ray Spine</button>
-      <button class="mode-btn" data-mode="35">IDC Scroll</button>
-      <button class="mode-btn" data-mode="36">IDC Chaos</button>
-      <button class="mode-btn" data-mode="37">IDC Typo</button>
-      <button class="mode-btn" data-mode="38">A, Heartbeat</button>
-      <button class="mode-btn" data-mode="39">A, Love Rain</button>
-      <button class="mode-btn" data-mode="40">A, Neon Love</button>
-      <button class="mode-btn" data-mode="41">B, Magnetic</button>
-      <button class="mode-btn" data-mode="42">B, Radar</button>
-      <button class="mode-btn" data-mode="43">B, Burning</button>
-      <button class="mode-btn" data-mode="44" style="border-color: #0cf; color: #0cf;">📷 Cam Motion</button>
-      <button class="mode-btn" data-mode="45" style="border-color: #ff4400; color: #ff4400;">🔥 Cam Thermal</button>
-      <button class="mode-btn" data-mode="46" style="border-color: #ff00ff; color: #ff00ff;">⚡ Cam Pixelsort</button>
-      <button class="mode-btn" data-mode="47" style="border-color: #00ffaa; color: #00ffaa;">👤 Cam Silhouette</button>
-      <button class="mode-btn" data-mode="48" style="border-color: #ffffff; color: #ffffff;">👁️ Raw + ASCII</button>
-      <div style="width: 100%; height: 10px;"></div>
-      <button class="mode-btn" data-mode="49" style="border-color: #ff88aa; color: #ff88aa;">💔 C, I MISS YOU</button>
-      <button class="mode-btn" data-mode="50" style="border-color: #00bbff; color: #00bbff;">💧 C, TEARDROPS</button>
-      <button class="mode-btn" data-mode="51" style="border-color: #aa88ff; color: #aa88ff;">📼 C, MEMORY</button>
     </div>
   </div>
 
-  <script src="ascii_flash.js?v=8"></script>
+  <script src="ascii_flash.js?v=9"></script>
 </body>
 </html>
