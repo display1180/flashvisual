@@ -428,10 +428,19 @@ function init() {
   const uiToggleBtn = document.getElementById('ui-toggle-btn');
   function toggleUI() {
     const isHidden = document.body.classList.toggle('ui-hidden');
-    uiToggleBtn.textContent = isHidden ? '👁️ SHOW UI (H)' : '👁️ HIDE UI (H)';
-    uiToggleBtn.style.opacity = isHidden ? '0.2' : '1';
+    if (uiToggleBtn) {
+      uiToggleBtn.textContent = isHidden ? '👁️ SHOW UI (H)' : '👁️ HIDE UI (H)';
+      uiToggleBtn.style.opacity = isHidden ? '0.2' : '1';
+    }
     const sp = document.getElementById('split-panels');
-    if (sp) sp.style.display = isHidden ? 'none' : 'flex';
+    const bw = document.getElementById('bottom-ui-wrapper');
+    const hud = document.getElementById('hud');
+    const fps = document.getElementById('fps-display');
+    
+    if (sp) sp.style.display = isHidden ? 'none' : '';
+    if (bw) bw.style.display = isHidden ? 'none' : '';
+    if (hud) hud.style.display = isHidden ? 'none' : '';
+    if (fps) fps.style.display = isHidden ? 'none' : '';
   }
   uiToggleBtn?.addEventListener('click', toggleUI);
   
