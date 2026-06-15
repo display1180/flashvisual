@@ -194,6 +194,10 @@
       align-items: center;
       z-index: 100;
       pointer-events: none;
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    #bottom-ui-wrapper.slide-down {
+      transform: translateY(100%);
     }
 
     /* ── Speed Slider ── */
@@ -351,10 +355,9 @@
 
   <div id="fps-display">60 FPS</div>
 
-  <button id="panel-toggle-btn" class="mode-btn" style="position: fixed; bottom: 30vh; right: 20px; z-index: 10000; border-color: #ffaa00; color: #ffaa00; background: rgba(0,0,0,0.8); pointer-events: auto;">⬇️ HIDE PANELS</button>
-
   <!-- Bottom UI Wrapper -->
   <div id="bottom-ui-wrapper">
+    <button id="panel-toggle-btn" class="mode-btn" style="position: absolute; top: -35px; right: 20px; z-index: 10000; border-color: #ffaa00; color: #ffaa00; background: rgba(0,0,0,0.8); pointer-events: auto;">⬇️ HIDE PANELS</button>
     <!-- Speed Control -->
     <div id="speed-panel">
       <label>Speed</label>
@@ -448,6 +451,6 @@
     </div>
   </div>
 
-  <script src="ascii_flash.js?v=18"></script>
+  <script src="ascii_flash.js?v=19"></script>
 </body>
 </html>

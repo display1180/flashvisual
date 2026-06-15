@@ -443,10 +443,10 @@ function init() {
     panelToggleBtn.addEventListener('click', () => {
       panelsHidden = !panelsHidden;
       if (panelsHidden) {
-        bottomUIWrapper.classList.add('hidden-override');
+        bottomUIWrapper.classList.add('slide-down');
         panelToggleBtn.textContent = '⬆️ SHOW PANELS';
       } else {
-        bottomUIWrapper.classList.remove('hidden-override');
+        bottomUIWrapper.classList.remove('slide-down');
         panelToggleBtn.textContent = '⬇️ HIDE PANELS';
       }
     });
