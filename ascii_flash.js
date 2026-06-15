@@ -430,6 +430,8 @@ function init() {
     const isHidden = document.body.classList.toggle('ui-hidden');
     uiToggleBtn.textContent = isHidden ? '👁️ SHOW UI (H)' : '👁️ HIDE UI (H)';
     uiToggleBtn.style.opacity = isHidden ? '0.2' : '1';
+    const sp = document.getElementById('split-panels');
+    if (sp) sp.style.display = isHidden ? 'none' : 'flex';
   }
   uiToggleBtn?.addEventListener('click', toggleUI);
   
@@ -516,7 +518,7 @@ function initClipDeck() {
   if (!container) return;
   VJ_CLIPS.forEach((clip, index) => {
     const btn = document.createElement('button');
-    btn.className = 'mode-btn';
+    btn.className = 'clip-btn';
     btn.textContent = clip.label;
     btn.onclick = () => playClip(clip);
     container.appendChild(btn);
@@ -530,7 +532,7 @@ function initClipDeck() {
       window._loadedAssets = assets;
       assets.forEach(asset => {
         const btn = document.createElement('button');
-        btn.className = 'mode-btn';
+        btn.className = 'clip-btn';
         btn.textContent = asset.label;
         btn.title = asset.id; // full name on hover
         btn.style.overflow = 'hidden';
