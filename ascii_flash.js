@@ -432,22 +432,26 @@ function init() {
       uiToggleBtn.textContent = isHidden ? '👁️ SHOW UI (H)' : '👁️ HIDE UI (H)';
       uiToggleBtn.style.opacity = isHidden ? '0.2' : '1';
     }
-    const sp = document.getElementById('split-panels');
-    const bw = document.getElementById('bottom-ui-wrapper');
-    const hud = document.getElementById('hud');
-    const fps = document.getElementById('fps-display');
-    const clipDeck = document.getElementById('clip-deck');
-    const modePanel = document.getElementById('mode-panel');
-    const speedPanel = document.getElementById('speed-panel');
     
-    const displayStyle = isHidden ? 'none' : '';
-    if (sp) sp.style.display = displayStyle;
-    if (bw) bw.style.display = displayStyle;
-    if (hud) hud.style.display = displayStyle;
-    if (fps) fps.style.display = displayStyle;
-    if (clipDeck) clipDeck.style.display = displayStyle;
-    if (modePanel) modePanel.style.display = displayStyle;
-    if (speedPanel) speedPanel.style.display = displayStyle;
+    const elementsToHide = [
+      document.getElementById('split-panels'),
+      document.getElementById('bottom-ui-wrapper'),
+      document.getElementById('hud'),
+      document.getElementById('fps-display'),
+      document.getElementById('clip-deck'),
+      document.getElementById('mode-panel'),
+      document.getElementById('speed-panel')
+    ];
+    
+    elementsToHide.forEach(el => {
+      if (el) {
+        if (isHidden) {
+          el.classList.add('hidden-override');
+        } else {
+          el.classList.remove('hidden-override');
+        }
+      }
+    });
   }
   uiToggleBtn?.addEventListener('click', toggleUI);
   
