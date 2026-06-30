@@ -1,5 +1,6 @@
 env/
 bin/
+brain-garden/
 .DS_Store
 
 # 사용하지 않는 수백 메가바이트짜리 에셋 폴더 전체 무시
