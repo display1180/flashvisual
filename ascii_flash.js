@@ -458,7 +458,7 @@ function init() {
 const VJ_CLIPS = [
   { id: 'mongsil', type: 'local', src: 'mongsil.mp4', label: '1: MONGSIL' },
   { id: '0525', type: 'local', src: '0525(3).mp4', label: '2: 0525' },
-  { id: 'yt_default', type: 'youtube', src: 'e2trxT-Z8C0', start: 231, label: '3: TAME IMPALA (YT)' }
+  { id: 'yt_default', type: 'youtube', src: 'e2trxT-Z8C0', label: '3: TAME IMPALA (YT)' }
 ];
 
 window.activeLocalPlayer = 1;
@@ -476,8 +476,7 @@ function playClip(clip) {
     local1.pause();
     local2.pause();
     ytPlayer.style.display = 'block';
-    let startParam = clip.start ? `&start=${clip.start}` : '';
-    ytPlayer.src = `https://www.youtube.com/embed/${clip.src}?autoplay=1&mute=1&loop=1&playlist=${clip.src}&controls=0&showinfo=0&rel=0&enablejsapi=1${startParam}`;
+    ytPlayer.src = `https://www.youtube.com/embed/${clip.src}?autoplay=1&mute=1&loop=1&playlist=${clip.src}&controls=0&showinfo=0&rel=0&enablejsapi=1`;
   } else if (clip.type === 'local') {
     ytPlayer.style.display = 'none';
     ytPlayer.src = '';
