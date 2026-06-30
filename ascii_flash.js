@@ -456,9 +456,9 @@ function init() {
 
 // ── VJ Clip Deck System ──
 const VJ_CLIPS = [
-  { id: 'mongsil', type: 'local', src: 'mongsil.mp4', label: '1: MONGSIL' },
-  { id: '0525', type: 'local', src: '0525(3).mp4', label: '2: 0525' },
-  { id: 'yt_default', type: 'youtube', src: 'e2trxT-Z8C0', label: '3: TAME IMPALA (YT)' }
+  { id: 'yt_default', type: 'youtube', src: 'e2trxT-Z8C0', label: '1: Original Track' },
+  { id: 'mongsil', type: 'local', src: 'mongsil.mp4', label: '2: MONGSIL' },
+  { id: '0525', type: 'local', src: '0525(3).mp4', label: '3: 0525' }
 ];
 
 window.activeLocalPlayer = 1;
